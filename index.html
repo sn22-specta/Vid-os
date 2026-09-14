@@ -41,25 +41,20 @@ h1{text-align:center;font-size:2rem;margin-bottom:6px;
 #tokenFeedback{display:none;width:100%;margin-top:8px;font-size:.85rem;
   font-weight:600;padding:10px 14px;border-radius:8px}
 #tokenFeedback.show{display:block}
-#tokenFeedback.ok{background:rgba(46,204,143,.15);color:#2ecc8f;
-  border:1px solid rgba(46,204,143,.5)}
-#tokenFeedback.err{background:rgba(255,93,108,.15);color:#ff5d6c;
-  border:1px solid rgba(255,93,108,.5)}
-#tokenFeedback.warn{background:rgba(250,204,21,.15);color:#facc15;
-  border:1px solid rgba(250,204,21,.5)}
+#tokenFeedback.ok{background:rgba(46,204,143,.15);color:#2ecc8f;border:1px solid rgba(46,204,143,.5)}
+#tokenFeedback.err{background:rgba(255,93,108,.15);color:#ff5d6c;border:1px solid rgba(255,93,108,.5)}
+#tokenFeedback.warn{background:rgba(250,204,21,.15);color:#facc15;border:1px solid rgba(250,204,21,.5)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
 .panel{background:var(--bg-elev);border:1px solid var(--border);
   border-radius:var(--radius);padding:22px}
-label{display:block;font-size:.85rem;color:var(--text-dim);
-  font-weight:600;margin-bottom:8px}
+label{display:block;font-size:.85rem;color:var(--text-dim);font-weight:600;margin-bottom:8px}
 .dropzone{position:relative;border:2px dashed var(--border);
   border-radius:var(--radius);padding:30px 20px;text-align:center;
   cursor:pointer;transition:border-color .2s,background .2s;
   background:var(--bg-elev-2);margin-bottom:16px;min-height:200px;
   display:flex;align-items:center;justify-content:center;flex-direction:column}
-.dropzone:hover,.dropzone.dragover{border-color:var(--accent);
-  background:rgba(124,92,255,.08)}
+.dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:rgba(124,92,255,.08)}
 .dropzone input[type=file]{display:none}
 .dropzone .dz-icon{font-size:2.4rem;margin-bottom:10px;opacity:.7}
 .dropzone .dz-text{color:var(--text-dim);font-size:.9rem}
@@ -70,8 +65,7 @@ textarea{width:100%;background:var(--bg-elev-2);border:1px solid var(--border);
   border-radius:var(--radius-sm);color:var(--text);font-family:inherit;
   font-size:.95rem;padding:12px;min-height:110px;resize:vertical;
   outline:none;margin-bottom:16px;line-height:1.5}
-textarea:focus{border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(124,92,255,.18)}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.18)}
 button.primary{width:100%;border:none;border-radius:var(--radius-sm);
   background:var(--accent-grad);color:#fff;font-family:inherit;
   font-size:1rem;font-weight:700;padding:15px;cursor:pointer;
@@ -93,17 +87,26 @@ button.primary.loading .spinner{display:inline-block}
 .stage .ph .icon{font-size:3rem;margin-bottom:10px;opacity:.6}
 .status{font-size:.88rem;padding:10px 14px;border-radius:var(--radius-sm);
   background:var(--bg-elev-2);border:1px solid var(--border);
-  color:var(--text-dim);min-height:20px}
+  color:var(--text-dim);min-height:20px;white-space:pre-wrap}
 .status:empty{display:none}
 .status.info{color:#58a6ff;border-color:rgba(88,166,255,.35);background:rgba(88,166,255,.08)}
 .status.success{color:#2ecc8f;border-color:rgba(46,204,143,.35);background:rgba(46,204,143,.08)}
 .status.error{color:#ff5d6c;border-color:rgba(255,93,108,.4);background:rgba(255,93,108,.08)}
+.status.warn{color:#facc15;border-color:rgba(250,204,21,.4);background:rgba(250,204,21,.08)}
+.log{background:#000;color:#9aa4b8;font-family:ui-monospace,monospace;
+  font-size:.75rem;padding:12px;border-radius:var(--radius-sm);
+  max-height:180px;overflow-y:auto;margin-top:14px;line-height:1.6;
+  border:1px solid var(--border)}
+.log .ok{color:#2ecc8f}
+.log .err{color:#ff5d6c}
+.log .warn{color:#facc15}
+.log .info{color:#58a6ff}
 </style>
 </head>
 <body>
 <div class="app">
   <h1>🎬 Prompt2Video</h1>
-  <p class="sub">Aucun terminal — tout se passe dans le navigateur.</p>
+  <p class="sub">Envoie une image + un prompt, l'IA anime la scène.</p>
 
   <div id="tokenBar" class="token-bar">
     <label for="tokenInput">🔑 Clé Replicate</label>
@@ -137,6 +140,8 @@ button.primary.loading .spinner{display:inline-block}
         <span class="spinner"></span>
         <span class="label">Générer la vidéo</span>
       </button>
+
+      <div id="log" class="log" style="display:none"></div>
     </section>
 
     <section class="panel">
@@ -156,10 +161,21 @@ button.primary.loading .spinner{display:inline-block}
 (function(){
   'use strict';
 
-  var API = 'https://api.replicate.com/v1';
+  // ============================================================
+  // Configuration
+  // ============================================================
   var MODEL_OWNER = 'stability-ai';
   var MODEL_NAME  = 'stable-video-diffusion-img2vid-xt';
 
+  // Proxy CORS : la requête passe par un service qui ajoute
+  // les en-têtes Access-Control-Allow-Origin manquants.
+  var CORS_PROXY = 'https://corsproxy.io/?url=';
+
+  var REPLICATE_BASE = 'https://api.replicate.com/v1';
+
+  // ============================================================
+  // Références DOM
+  // ============================================================
   var tokenBar    = document.getElementById('tokenBar');
   var tokenInput  = document.getElementById('tokenInput');
   var saveBtn     = document.getElementById('saveToken');
@@ -170,35 +186,48 @@ button.primary.loading .spinner{display:inline-block}
   var btn         = document.getElementById('generate');
   var stage       = document.getElementById('stage');
   var statusEl    = document.getElementById('status');
+  var logEl       = document.getElementById('log');
 
   var selectedFile = null;
   var isGenerating = false;
   var memoryToken  = '';
 
-  // ---------- Log visible dans la page (debug) ----------
-  function debug(msg){
+  // ============================================================
+  // Journal visible dans la page
+  // ============================================================
+  function log(msg, kind){
+    var time = new Date().toLocaleTimeString('fr-FR');
+    var line = '[' + time + '] ' + msg;
     console.log('[Prompt2Video] ' + msg);
+    logEl.style.display = 'block';
+    var span = document.createElement('div');
+    if (kind) span.className = kind;
+    span.textContent = line;
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
   }
 
-  // ---------- Feedback sous le bouton Enregistrer ----------
+  // ============================================================
+  // Feedback sous le bouton Enregistrer
+  // ============================================================
   function feedback(msg, kind){
     feedbackEl.textContent = msg;
     feedbackEl.className = 'show ' + (kind || 'ok');
   }
 
-  // ---------- Token : récupération ----------
+  // ============================================================
+  // Gestion du token
+  // ============================================================
   function getToken(){
-    return memoryToken || (function(){
-      try { return localStorage.getItem('replicate_token') || ''; }
-      catch(e){ return ''; }
-    })();
+    if (memoryToken) return memoryToken;
+    try { return localStorage.getItem('replicate_token') || ''; }
+    catch(e){ return ''; }
   }
 
-  // ---------- Initialisation : charge la clé si déjà sauvegardée ----------
   (function initToken(){
     var t = '';
     try { t = localStorage.getItem('replicate_token') || ''; }
-    catch(e){ debug('localStorage inaccessible au démarrage'); }
+    catch(e){ log('localStorage inaccessible au démarrage', 'warn'); }
 
     if (t){
       tokenInput.value = t;
@@ -208,56 +237,53 @@ button.primary.loading .spinner{display:inline-block}
     }
   })();
 
-  // ---------- Clic sur Enregistrer ----------
   saveBtn.addEventListener('click', function(){
-    debug('Clic Enregistrer. Valeur du champ = ' +
-          (tokenInput.value ? tokenInput.value.slice(0,7) + '…' : '(vide)'));
-
+    log('Clic sur Enregistrer');
     var t = tokenInput.value.trim();
 
     if (!t){
       feedback('❌ Le champ est vide. Colle ta clé d\'abord.', 'err');
-      tokenInput.focus();
       return;
     }
     if (!t.startsWith('r8_')){
-      feedback('❌ La clé doit commencer par "r8_". Vérifie que tu as bien copié la bonne.', 'err');
+      feedback('❌ La clé doit commencer par "r8_".', 'err');
       return;
     }
     if (t.length < 20){
-      feedback('❌ La clé semble incomplète. Elle doit faire ~40 caractères.', 'err');
+      feedback('❌ La clé semble incomplète (~40 caractères attendus).', 'err');
       return;
     }
 
     memoryToken = t;
-
     var persisted = false;
     try {
       localStorage.setItem('replicate_token', t);
       persisted = true;
     } catch(e){
-      debug('localStorage.setItem a échoué : ' + e.message);
+      log('localStorage.setItem a échoué : ' + e.message, 'warn');
     }
 
     tokenBar.classList.add('ok');
-
     if (persisted){
       feedback('✅ Clé enregistrée pour de bon ! (' + t.slice(0,7) + '…)', 'ok');
     } else {
-      feedback('⚠️ Clé gardée en mémoire seulement. Elle sera perdue au rechargement. ' +
-               'Utilise Firefox ou héberge la page en ligne (Netlify Drop).', 'warn');
+      feedback('⚠️ Clé en mémoire seulement (perdue au rechargement).', 'warn');
     }
-
     setStatus('✅ Clé prête. Tu peux générer une vidéo.', 'success');
+    log('Clé enregistrée (' + t.slice(0,7) + '…)', 'ok');
   });
 
-  // ---------- Statut ----------
+  // ============================================================
+  // Statut
+  // ============================================================
   function setStatus(msg, type){
     statusEl.textContent = msg;
     statusEl.className = 'status ' + (type || '');
   }
 
-  // ---------- Image ----------
+  // ============================================================
+  // Image
+  // ============================================================
   function showPreview(file){
     var url = URL.createObjectURL(file);
     dropzone.classList.add('has-image');
@@ -267,7 +293,7 @@ button.primary.loading .spinner{display:inline-block}
     fileInput = document.getElementById('fileInput');
     bindFileInput();
     selectedFile = file;
-    debug('Image chargée : ' + file.name + ' (' + Math.round(file.size/1024) + ' Ko)');
+    log('Image chargée : ' + file.name + ' (' + Math.round(file.size/1024) + ' Ko)', 'ok');
   }
 
   function bindFileInput(){
@@ -293,7 +319,9 @@ button.primary.loading .spinner{display:inline-block}
   });
   bindFileInput();
 
-  // ---------- Résultat ----------
+  // ============================================================
+  // Affichage résultat
+  // ============================================================
   function showPlaceholder(msg){
     stage.innerHTML =
       '<div class="ph"><div class="icon">⏳</div><p>' + msg + '</p></div>';
@@ -309,7 +337,9 @@ button.primary.loading .spinner{display:inline-block}
     btn.querySelector('.label').textContent = 'Générer la vidéo';
   }
 
-  // ---------- Fichier → data URI ----------
+  // ============================================================
+  // Fichier → data URI
+  // ============================================================
   function fileToDataURI(file){
     return new Promise(function(resolve, reject){
       var reader = new FileReader();
@@ -319,7 +349,13 @@ button.primary.loading .spinner{display:inline-block}
     });
   }
 
-  // ---------- Appel Replicate ----------
+  // ============================================================
+  // Appel via proxy CORS
+  // ============================================================
+  function proxied(url){
+    return CORS_PROXY + encodeURIComponent(url);
+  }
+
   async function callReplicate(imageDataUri){
     var token = getToken();
     if (!token) throw new Error('Clé Replicate manquante.');
@@ -336,46 +372,62 @@ button.primary.loading .spinner{display:inline-block}
       }
     };
 
-    debug('Envoi de la prédiction à Replicate…');
+    var createUrl = REPLICATE_BASE + '/models/' +
+                    MODEL_OWNER + '/' + MODEL_NAME + '/predictions';
 
-    var res = await fetch(
-      API + '/models/' + MODEL_OWNER + '/' + MODEL_NAME + '/predictions',
-      {
+    log('Envoi de la prédiction via proxy CORS…', 'info');
+
+    var res;
+    try {
+      res = await fetch(proxied(createUrl), {
         method: 'POST',
         headers: {
           'Authorization': 'Token ' + token,
-          'Content-Type': 'application/json',
-          'Prefer': 'wait=60'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
-      }
-    );
+      });
+    } catch(err){
+      log('Échec du fetch initial : ' + err.message, 'err');
+      throw new Error(
+        'Impossible de contacter Replicate. Vérifie ta connexion ' +
+        'ou essaie un autre proxy. (' + err.message + ')'
+      );
+    }
 
     if (!res.ok){
       var errText = '';
       try { errText = await res.text(); } catch(e){}
-      throw new Error('Replicate a refusé la requête (' + res.status + '). ' +
-                      (res.status === 401 ? 'Clé invalide ou expirée.' :
-                       res.status === 402 ? 'Crédit Replicate épuisé.' :
-                       res.status === 429 ? 'Trop de requêtes.' : errText.slice(0,200)));
+      log('Réponse HTTP ' + res.status, 'err');
+      var msg = 'Erreur ' + res.status + '. ';
+      if (res.status === 401) msg += 'Clé invalide ou expirée.';
+      else if (res.status === 402) msg += 'Crédit Replicate épuisé.';
+      else if (res.status === 429) msg += 'Trop de requêtes, réessaie dans 1 min.';
+      else msg += errText.slice(0, 300);
+      throw new Error(msg);
     }
 
     var pred = await res.json();
-    debug('Prédiction créée : ' + pred.id + ' (status=' + pred.status + ')');
+    log('Prédiction créée : ' + pred.id + ' (status=' + pred.status + ')', 'info');
 
     var attempts = 0;
     while (pred.status !== 'succeeded' && pred.status !== 'failed'){
-      if (attempts++ > 60) throw new Error('Délai dépassé (3 minutes).');
+      if (attempts++ > 90) throw new Error('Délai dépassé (4 minutes et demie).');
       setStatus('🎬 Génération… (' + (attempts * 3) + 's)', 'info');
       await new Promise(function(r){ setTimeout(r, 3000); });
 
-      var pr = await fetch(pred.urls.get, {
-        headers: { 'Authorization': 'Token ' + token }
-      });
+      var pr;
+      try {
+        pr = await fetch(proxied(pred.urls.get), {
+          headers: { 'Authorization': 'Token ' + token }
+        });
+      } catch(err){
+        log('Polling échoué, on retente…', 'warn');
+        continue;
+      }
       if (!pr.ok){
-        var txt = '';
-        try { txt = await pr.text(); } catch(e){}
-        throw new Error('Erreur de suivi (' + pr.status + ') ' + txt.slice(0,200));
+        log('Erreur de suivi : HTTP ' + pr.status, 'warn');
+        continue;
       }
       pred = await pr.json();
     }
@@ -386,16 +438,18 @@ button.primary.loading .spinner{display:inline-block}
 
     var output = pred.output;
     var url = Array.isArray(output) ? output[0] : output;
-    debug('Vidéo prête : ' + url);
+    log('Vidéo prête : ' + url, 'ok');
     return url;
   }
 
-  // ---------- Clic Générer ----------
+  // ============================================================
+  // Clic Générer
+  // ============================================================
   btn.addEventListener('click', async function(){
     if (isGenerating) return;
 
     if (!getToken()){
-      setStatus('⚠️ Enregistre ta clé Replicate d\'abord (en haut de la page).', 'error');
+      setStatus('⚠️ Enregistre ta clé Replicate d\'abord (en haut).', 'error');
       tokenInput.focus();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -417,23 +471,30 @@ button.primary.loading .spinner{display:inline-block}
     btn.querySelector('.label').textContent = 'Génération…';
     setStatus('⏳ Préparation de l\'image…', 'info');
     showPlaceholder('L\'IA anime ton image…');
+    log('Début de la génération. Prompt : "' + prompt + '"', 'info');
 
     try {
       var dataUri = await fileToDataURI(selectedFile);
-      setStatus('🚀 Envoi à Replicate…', 'info');
+      log('Image encodée en base64 (' + Math.round(dataUri.length/1024) + ' Ko)', 'ok');
+
+      setStatus('🚀 Envoi à Replicate (via proxy)…', 'info');
       var videoUrl = await callReplicate(dataUri);
+
       showVideo(videoUrl);
-      setStatus('✅ Vidéo générée !', 'success');
+      setStatus('✅ Vidéo générée ! Le prompt utilisé : "' + prompt + '"', 'success');
     } catch (err){
       console.error('[Prompt2Video] Erreur :', err);
       setStatus('❌ ' + err.message, 'error');
       showPlaceholder('La génération a échoué.');
+      log('Erreur : ' + err.message, 'err');
     } finally {
       stopGenerating();
     }
   });
 
-  // ---------- Raccourci Ctrl+Entrée ----------
+  // ============================================================
+  // Raccourci Ctrl/Cmd + Entrée
+  // ============================================================
   promptEl.addEventListener('keydown', function(e){
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
       e.preventDefault();
@@ -441,8 +502,8 @@ button.primary.loading .spinner{display:inline-block}
     }
   });
 
-  debug('Prêt. Colle ta clé Replicate puis clique Enregistrer.');
+  log('Prêt. Colle ta clé Replicate puis clique Enregistrer.', 'ok');
 })();
 </script>
 </body>
-  </html>
+</html>
