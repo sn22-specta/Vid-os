@@ -1,713 +1,384 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Voix & Bouche</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studio Vocal Autonome</title>
 <style>
-:root{
-  --bg:#0b0d12;--bg-elev:#12151d;--bg-elev-2:#181c27;
-  --border:#262c3d;--text:#e8ecf4;--text-dim:#9aa4b8;--text-faint:#626b80;
-  --accent:#7c5cff;--accent-grad:linear-gradient(135deg,#7c5cff,#22d3ee);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  padding:24px;min-height:100vh;
-  background-image:
-    radial-gradient(1200px 600px at 10% -10%,rgba(124,92,255,.12),transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%,rgba(34,211,238,.08),transparent 55%);}
-.app{max-width:900px;margin:0 auto}
-h1{text-align:center;font-size:1.8rem;margin-bottom:6px;
-  background:var(--accent-grad);-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;font-weight:800}
-.sub{text-align:center;color:var(--text-dim);font-size:.9rem;margin-bottom:24px}
-.panel{background:var(--bg-elev);border:1px solid var(--border);
-  border-radius:14px;padding:20px;margin-bottom:16px}
-.section-title{font-size:.72rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:var(--accent);margin-bottom:10px;
-  display:flex;align-items:center;gap:8px}
-.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-label{display:block;font-size:.85rem;color:var(--text-dim);
-  font-weight:600;margin-bottom:6px}
-.dropzone{display:block;border:2px dashed var(--border);
-  border-radius:10px;padding:24px;text-align:center;
-  cursor:pointer;transition:all .2s;background:var(--bg-elev-2)}
-.dropzone:hover{border-color:var(--accent);background:rgba(124,92,255,.08)}
-.dropzone input{position:absolute;left:-9999px}
-.dropzone .icon{font-size:2rem;margin-bottom:6px;opacity:.7}
-.dropzone .txt{color:var(--text-dim);font-size:.85rem}
-canvas{background:#000;max-width:100%;display:block;border-radius:10px;
-  cursor:crosshair;margin:0 auto}
-textarea,.preset{width:100%;background:var(--bg-elev-2);border:1px solid var(--border);
-  border-radius:8px;color:var(--text);font-family:inherit;font-size:.9rem;
-  padding:11px;outline:none;line-height:1.5}
-textarea{min-height:80px;resize:vertical}
-textarea:focus,.preset:focus{border-color:var(--accent)}
-.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-  gap:8px;margin-bottom:12px}
-.preset{background:var(--bg-elev-2);border:1px solid var(--border);
-  border-radius:8px;color:var(--text-dim);font-size:.78rem;padding:9px 11px;
-  cursor:pointer;transition:all .2s;text-align:left;font-weight:600}
-.preset:hover{border-color:var(--accent);color:var(--text);background:rgba(124,92,255,.1)}
-.row{margin-bottom:12px}
-.row-head{display:flex;justify-content:space-between;align-items:center;
-  font-size:.82rem;color:var(--text-dim);font-weight:600;margin-bottom:5px}
-.row-head .val{color:var(--accent);font-family:ui-monospace,monospace;font-size:.82rem}
-select,input[type=range]{width:100%}
-select{background:var(--bg-elev-2);border:1px solid var(--border);border-radius:8px;
-  color:var(--text);font-family:inherit;font-size:.88rem;padding:10px;outline:none;
-  cursor:pointer}
-input[type=range]{-webkit-appearance:none;height:5px;background:var(--bg-elev-2);
-  border-radius:3px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
-  background:var(--accent-grad);border-radius:50%;cursor:pointer;
-  box-shadow:0 2px 8px rgba(124,92,255,.5)}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#7c5cff;
-  border:none;border-radius:50%;cursor:pointer}
-.btns{display:flex;gap:10px;flex-wrap:wrap}
-button{flex:1;min-width:120px;padding:13px;font-size:.9rem;font-weight:700;
-  border:none;border-radius:8px;color:#fff;cursor:pointer;
-  background:var(--accent-grad);transition:all .2s;
-  box-shadow:0 4px 14px rgba(124,92,255,.3);
-  display:flex;align-items:center;justify-content:center;gap:6px}
-button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,92,255,.5)}
-button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
-button.alt{background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim)}
-button.alt:hover:not(:disabled){border-color:var(--border);color:var(--text);background:var(--bg-elev-2)}
-button.rec{background:linear-gradient(135deg,#ff5d6c,#ff8c42);
-  box-shadow:0 4px 14px rgba(255,93,108,.3)}
-.status{font-size:.85rem;padding:10px 14px;border-radius:8px;
-  background:var(--bg-elev-2);border:1px solid var(--border);
-  color:var(--text-dim);margin-top:12px;min-height:20px}
-.status.info{color:#58a6ff;border-color:rgba(88,166,255,.35);background:rgba(88,166,255,.08)}
-.status.success{color:#2ecc8f;border-color:rgba(46,204,143,.35);background:rgba(46,204,143,.08)}
-.status.error{color:#ff5d6c;border-color:rgba(255,93,108,.4);background:rgba(255,93,108,.08)}
-#dl{display:none;margin-top:12px;padding:12px;background:rgba(46,204,143,.15);
-  border:1px solid rgba(46,204,143,.4);border-radius:8px;color:#2ecc8f;
-  text-decoration:none;font-weight:600;text-align:center;font-size:.88rem}
-#dl:hover{background:rgba(46,204,143,.25)}
-.tip{font-size:.72rem;color:var(--text-faint);font-style:italic;margin-top:4px}
+  :root{
+    --bg:#0b1220; --card:#141c2e; --card2:#1e293b; --text:#e2e8f0;
+    --muted:#94a3b8; --primary:#6366f1; --accent:#a855f7;
+    --danger:#ef4444; --ok:#22c55e; --warn:#f59e0b; --border:#334155;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(circle at top,#1e293b 0%,#0b1220 70%);
+    color:var(--text); min-height:100vh; padding:16px;
+    display:flex; justify-content:center; align-items:flex-start;
+  }
+  .app{width:100%;max-width:900px;background:rgba(20,28,46,.95);
+    border:1px solid var(--border);border-radius:22px;padding:26px;
+    box-shadow:0 25px 60px rgba(0,0,0,.6)}
+  h1{font-size:clamp(1.4rem,3vw,1.9rem);text-align:center;margin-bottom:4px;
+    background:linear-gradient(90deg,#818cf8,#c084fc,#f472b6);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:18px}
+  textarea{width:100%;min-height:150px;resize:vertical;background:#0b1220;
+    color:var(--text);border:1px solid var(--border);border-radius:14px;
+    padding:14px;font-size:1rem;line-height:1.6;outline:none;transition:.2s}
+  textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+  .meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+    margin:10px 4px 16px;font-size:.85rem;color:var(--muted)}
+  #status{font-weight:700;color:var(--ok)}
+
+  .section-title{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--muted);margin:14px 4px 8px}
+
+  .profiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+    gap:8px;margin-bottom:14px}
+  .profile{
+    background:var(--card2);border:1px solid var(--border);border-radius:12px;
+    padding:10px 6px;cursor:pointer;text-align:center;font-size:.82rem;
+    font-weight:600;transition:.15s;color:var(--text);user-select:none}
+  .profile:hover{transform:translateY(-2px);border-color:var(--primary)}
+  .profile.active{background:linear-gradient(135deg,#6366f1,#a855f7);
+    border-color:transparent;box-shadow:0 6px 20px rgba(99,102,241,.4)}
+  .profile .emoji{display:block;font-size:1.3rem;margin-bottom:2px}
+
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;margin-bottom:18px}
+  .control{background:var(--card2);border:1px solid var(--border);
+    border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+  .control label{font-size:.82rem;color:var(--muted);display:flex;
+    justify-content:space-between;align-items:center}
+  .control .value{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+  select,input[type=range]{width:100%;accent-color:var(--primary)}
+  select{background:#0b1220;color:var(--text);border:1px solid var(--border);
+    border-radius:10px;padding:10px;font-size:.92rem;outline:none}
+  select:focus{border-color:var(--primary)}
+
+  .buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  button{border:1px solid var(--border);border-radius:12px;padding:12px 18px;
+    font-size:.92rem;font-weight:700;cursor:pointer;color:#fff;
+    background:var(--card2);transition:.15s;min-width:120px}
+  button:hover{filter:brightness(1.15);transform:translateY(-1px)}
+  button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  button.primary{background:linear-gradient(135deg,var(--primary),#8b5cf6);border:none}
+  button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);border:none}
+
+  footer{margin-top:20px;text-align:center;font-size:.78rem;color:var(--muted);line-height:1.5}
+  @media(max-width:520px){.app{padding:18px}button{flex:1 1 100%}}
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>👄🎙️ Voix & Bouche</h1>
-  <p class="sub">Choisis un texte, règle la voix, anime ta bouche, enregistre la vidéo.</p>
+  <h1>🎙️ Studio Vocal Autonome</h1>
+  <p class="sub">Fonctionne 100% hors ligne — aucune dépendance externe.</p>
 
-  <!-- ÉTAPE 1 : Image -->
-  <div class="panel">
-    <div class="section-title">📸 1. Image</div>
-    <label class="dropzone" for="f">
-      <input type="file" id="f" accept="image/*">
-      <div class="icon">🖼️</div>
-      <div class="txt">Choisis une image de visage</div>
-    </label>
-    <canvas id="c" width="640" height="480" style="display:none"></canvas>
-    <div class="tip" id="posTip" style="display:none">
-      👆 Clique sur la bouche dans l'image pour la positionner
+  <textarea id="text" placeholder="Écris ton texte ici...">Bonjour, je suis une voix entièrement générée par ton appareil. Aucune connexion internet n'est nécessaire.</textarea>
+
+  <div class="meta">
+    <span id="charCount">0 caractère</span>
+    <span id="status">Prêt</span>
+  </div>
+
+  <div class="section-title">Type de voix (profil)</div>
+  <div class="profiles" id="profiles"></div>
+
+  <div class="section-title">Voix système</div>
+  <div class="controls">
+    <div class="control" style="grid-column:1/-1">
+      <label for="voiceSelect">Voix installée sur l'appareil</label>
+      <select id="voiceSelect"></select>
+    </div>
+
+    <div class="control">
+      <label for="rate">Vitesse <span class="value" id="rateValue">1.0</span></label>
+      <input type="range" id="rate" min="0.1" max="3" step="0.1" value="1">
+    </div>
+
+    <div class="control">
+      <label for="pitch">Tonalité <span class="value" id="pitchValue">1.0</span></label>
+      <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+    </div>
+
+    <div class="control">
+      <label for="volume">Volume <span class="value" id="volumeValue">1.00</span></label>
+      <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
     </div>
   </div>
 
-  <!-- ÉTAPE 2 : Texte -->
-  <div class="panel">
-    <div class="section-title">✍️ 2. Ce que la personne dit</div>
-
-    <div class="presets" id="presets">
-      <button class="preset" data-tone="joyeux">😄 Joyeux</button>
-      <button class="preset" data-tone="neutre">😐 Neutre</button>
-      <button class="preset" data-tone="serieux">😎 Sérieux</button>
-      <button class="preset" data-tone="amical">😊 Amical</button>
-      <button class="preset" data-tone="promo">📢 Pub</button>
-      <button class="preset" data-tone="histoire">📖 Histoire</button>
-      <button class="preset" data-tone="surprise">😲 Surprise</button>
-      <button class="preset" data-tone="amour">💕 Doux</button>
-    </div>
-
-    <textarea id="texte" placeholder="Écris ton texte ici...">Bonjour ! Je suis une image qui parle. Grâce à cette application, ma bouche bouge en rythme avec ma voix. Choisis un texte ou écris le tien, ajuste la vitesse, et regarde le résultat.</textarea>
-    <div class="tip">💡 Clique sur un des boutons ci-dessus pour insérer un texte prêt à l'emploi, ou écris le tien.</div>
+  <div class="buttons">
+    <button id="speakBtn" class="primary">▶ Lire</button>
+    <button id="pauseBtn">⏸ Pause</button>
+    <button id="resumeBtn">⏯ Reprendre</button>
+    <button id="stopBtn" class="danger">⏹ Stop</button>
   </div>
 
-  <!-- ÉTAPE 3 : Voix -->
-  <div class="panel">
-    <div class="section-title">🎵 3. Paramètres de la voix</div>
-
-    <div class="row">
-      <label>Langue</label>
-      <select id="voix">
-        <option value="fr">🇫🇷 Français</option>
-        <option value="en">🇬🇧 Anglais</option>
-        <option value="es">🇪🇸 Espagnol</option>
-        <option value="de">🇩🇪 Allemand</option>
-        <option value="it">🇮🇹 Italien</option>
-        <option value="pt">🇵🇹 Portugais</option>
-      </select>
-    </div>
-
-    <div class="row">
-      <div class="row-head">
-        <span>Vitesse de parole</span>
-        <span class="val" id="vitVal">1.0×</span>
-      </div>
-      <input type="range" id="vit" min="0.5" max="2" step="0.1" value="1">
-    </div>
-
-    <div class="row">
-      <div class="row-head">
-        <span>Taille de la bouche</span>
-        <span class="val" id="tailleVal">50</span>
-      </div>
-      <input type="range" id="taille" min="15" max="150" value="50">
-    </div>
-
-    <div class="row">
-      <div class="row-head">
-        <span>Sensibilité au son</span>
-        <span class="val" id="sensVal">3</span>
-      </div>
-      <input type="range" id="sens" min="1" max="10" step="0.5" value="3">
-    </div>
-  </div>
-
-  <!-- ÉTAPE 4 : Actions -->
-  <div class="panel">
-    <div class="section-title">🎬 4. Actions</div>
-    <div class="btns">
-      <button id="speakBtn" disabled>🔊 Écouter</button>
-      <button id="recBtn" class="rec" disabled>⏺ Enregistrer vidéo</button>
-    </div>
-    <div class="status" id="status">Charge une image pour commencer.</div>
-    <a id="dl" download="parlant.webm">⬇️ Télécharger la vidéo</a>
-  </div>
+  <footer>
+    Aucune connexion réseau • Aucune bibliothèque externe • Tout est dans ce fichier.
+  </footer>
 </div>
 
 <script>
 (function(){
-'use strict';
+  "use strict";
 
-console.log('=== Voix & Bouche démarré ===');
+  /* ============================================================
+     PROFILS VOCAUX — combinaisons pitch / vitesse / volume
+     ============================================================ */
+  const PROFILES = [
+    { id:"normal",    name:"Normal",     emoji:"🙂", pitch:1.0, rate:1.0,  volume:1.0  },
+    { id:"narrateur", name:"Narrateur",  emoji:"📖", pitch:0.9, rate:0.9,  volume:1.0  },
+    { id:"presentateur", name:"Présentateur", emoji:"📢", pitch:1.0, rate:1.15, volume:1.0 },
+    { id:"enfant",    name:"Enfant",     emoji:"🧒", pitch:1.8, rate:1.15, volume:1.0  },
+    { id:"geant",     name:"Géant",      emoji:"🗿", pitch:0.3, rate:0.7,  volume:1.0  },
+    { id:"robot",     name:"Robot",      emoji:"🤖", pitch:0.5, rate:0.8,  volume:1.0  },
+    { id:"alien",     name:"Alien",      emoji:"👽", pitch:1.9, rate:0.7,  volume:1.0  },
+    { id:"fantome",   name:"Fantôme",    emoji:"👻", pitch:0.7, rate:0.6,  volume:0.7  },
+    { id:"mysterieux",name:"Mystérieux", emoji:"🕵️", pitch:0.6, rate:0.85, volume:0.9  },
+    { id:"rapide",    name:"Rapide",     emoji:"⚡", pitch:1.1, rate:1.8,  volume:1.0  },
+    { id:"lent",      name:"Très lent",  emoji:"🐢", pitch:0.95,rate:0.5,  volume:1.0  },
+    { id:"puissant",  name:"Puissant",   emoji:"💥", pitch:0.7, rate:1.2,  volume:1.0  }
+  ];
 
-// ============================================================
-// DOM
-// ============================================================
-var input = document.getElementById('f');
-var canvas = document.getElementById('c');
-var ctx = canvas.getContext('2d');
-var presetsEl = document.getElementById('presets');
-var texteEl = document.getElementById('texte');
-var voixEl = document.getElementById('voix');
-var vitEl = document.getElementById('vit');
-var vitVal = document.getElementById('vitVal');
-var tailleEl = document.getElementById('taille');
-var tailleVal = document.getElementById('tailleVal');
-var sensEl = document.getElementById('sens');
-var sensVal = document.getElementById('sensVal');
-var speakBtn = document.getElementById('speakBtn');
-var recBtn = document.getElementById('recBtn');
-var statusEl = document.getElementById('status');
-var dl = document.getElementById('dl');
-var posTip = document.getElementById('posTip');
+  /* ============================================================
+     RÉFÉRENCES DOM
+     ============================================================ */
+  const synth       = window.speechSynthesis;
+  const textEl      = document.getElementById("text");
+  const voiceSelect = document.getElementById("voiceSelect");
+  const rateEl      = document.getElementById("rate");
+  const pitchEl     = document.getElementById("pitch");
+  const volumeEl    = document.getElementById("volume");
+  const rateValue   = document.getElementById("rateValue");
+  const pitchValue  = document.getElementById("pitchValue");
+  const volumeValue = document.getElementById("volumeValue");
+  const speakBtn    = document.getElementById("speakBtn");
+  const pauseBtn    = document.getElementById("pauseBtn");
+  const resumeBtn   = document.getElementById("resumeBtn");
+  const stopBtn     = document.getElementById("stopBtn");
+  const statusEl    = document.getElementById("status");
+  const charCountEl = document.getElementById("charCount");
+  const profilesEl  = document.getElementById("profiles");
 
-// ============================================================
-// État
-// ============================================================
-var image = null;
-var mouthX = -1;
-var mouthY = -1;
-var audioContext = null;
-var analyser = null;
-var audioEl = null;
-var currentAudioUrl = null;
-var currentVolume = 0;
-var isSpeaking = false;
-var isRecording = false;
-var rafId = null;
+  let voices = [];
+  let currentProfileId = "normal";
 
-// ============================================================
-// Textes prédéfinis par tonalité (je les ai écrits pour toi)
-// ============================================================
-var PRESETS = {
-  joyeux: [
-    "Bonjour tout le monde ! Quelle journée magnifique ! Je suis super content de vous voir, et j'espère que vous passez une excellente journée !",
-    "Youpi ! On a réussi ! C'est génial, je n'y croyais pas ! Bravo à tous, on a fait du super boulot !",
-    "Salut ! Bienvenue dans cette superbe aventure ! Prépare-toi, ça va être incroyable !"
-  ],
-  neutre: [
-    "Bonjour. Je suis une image qui parle. Ma bouche bouge en rythme avec ma voix. Ceci est une démonstration.",
-    "Bienvenue. Ceci est un test de synchronisation labiale. La bouche s'ouvre et se ferme selon le volume du son.",
-    "Voici une phrase neutre, sans émotion particulière. Elle sert à tester le rendu standard."
-  ],
-  serieux: [
-    "Mesdames, messieurs, bonjour. Nous sommes réunis aujourd'hui pour présenter une nouvelle technologie.",
-    "Il est important de prendre ce sujet au sérieux. Les conséquences pourraient être considérables.",
-    "Je vais vous exposer les faits. Prenez le temps d'écouter attentivement chaque point."
-  ],
-  amical: [
-    "Salut ! Comment ça va ? Ça fait plaisir de te voir ! Raconte-moi tout, qu'est-ce que tu deviens ?",
-    "Coucou ! J'espère que tout va bien pour toi. Passe une super journée, à très bientôt !",
-    "Hey ! Bienvenue ! Installe-toi, mets-toi à l'aise, on va passer un bon moment ensemble."
-  ],
-  promo: [
-    "Ne manquez pas cette offre exceptionnelle ! Pour une durée limitée seulement, profitez de moins cinquante pour cent de réduction !",
-    "Découvrez notre nouveau produit révolutionnaire ! Simple, rapide, efficace. Commandez dès maintenant !",
-    "Une offre unique, un prix imbattable, une qualité incomparable. Réservez votre place dès aujourd'hui !"
-  ],
-  histoire: [
-    "Il était une fois, dans un royaume lointain, une jeune fille qui rêvait d'aventures extraordinaires.",
-    "Par une nuit sombre et orageuse, un mystérieux voyageur frappa à la porte du vieux château.",
-    "Bien des années auparavant, dans un petit village au bord de la mer, vivait un pêcheur solitaire."
-  ],
-  surprise: [
-    "Oh là là ! Incroyable ! Je n'en reviens pas ! Regardez ça, c'est absolument phénoménal !",
-    "Attends... Quoi ?! Tu es sérieux ?! Je ne m'attendais vraiment pas à ça !",
-    "Waouh ! C'est fou ! Comment est-ce possible ?! Je suis stupéfait !"
-  ],
-  amour: [
-    "Mon amour, chaque jour passé près de toi est un cadeau. Tu es la lumière de ma vie.",
-    "Je t'aime plus que tout au monde. Tu es la personne la plus précieuse à mes yeux.",
-    "Doucement, tendrement, je te murmure ces mots. Tu es tout pour moi, pour toujours."
-  ]
-};
-
-// ============================================================
-// Boutons de texte prédéfini
-// ============================================================
-presetsEl.addEventListener('click', function(e){
-  var b = e.target.closest('.preset');
-  if (!b) return;
-  var tone = b.dataset.tone;
-  var list = PRESETS[tone];
-  // Alterne entre les variantes à chaque clic
-  var idx = b.dataset.idx ? (Number(b.dataset.idx) + 1) % list.length : 0;
-  b.dataset.idx = idx;
-  texteEl.value = list[idx];
-  currentAudioUrl = null;
-  setStatus('📝 Texte "' + tone + '" inséré', 'info');
-});
-
-// ============================================================
-// Sliders
-// ============================================================
-vitEl.addEventListener('input', function(){
-  vitVal.textContent = Number(vitEl.value).toFixed(1) + '×';
-  if (audioEl) audioEl.playbackRate = Number(vitEl.value);
-});
-tailleEl.addEventListener('input', function(){
-  tailleVal.textContent = tailleEl.value;
-  if (!isSpeaking && !isRecording) dessiner();
-});
-sensEl.addEventListener('input', function(){
-  sensVal.textContent = sensEl.value;
-});
-
-// ============================================================
-// Chargement image
-// ============================================================
-input.addEventListener('change', function(e){
-  var file = e.target.files[0];
-  if (!file) return;
-
-  var reader = new FileReader();
-  reader.onload = function(ev){
-    var img = new Image();
-    img.onload = function(){
-      image = img;
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.style.display = 'block';
-      posTip.style.display = 'block';
-      mouthX = img.width / 2;
-      mouthY = img.height * 0.72;
-
-      speakBtn.disabled = false;
-      recBtn.disabled = false;
-      setStatus('✅ Image chargée (' + img.width + '×' + img.height +
-                '). Clique sur la bouche pour ajuster.', 'success');
-      dessiner();
-    };
-    img.onerror = function(){ setStatus('❌ Erreur image', 'error'); };
-    img.src = ev.target.result;
-  };
-  reader.onerror = function(){ setStatus('❌ Erreur lecture', 'error'); };
-  reader.readAsDataURL(file);
-  setTimeout(function(){ input.value = ''; }, 400);
-});
-
-// ============================================================
-// Position bouche
-// ============================================================
-canvas.addEventListener('click', function(e){
-  if (!image) return;
-  var r = canvas.getBoundingClientRect();
-  mouthX = (e.clientX - r.left) * (canvas.width / r.width);
-  mouthY = (e.clientY - r.top) * (canvas.height / r.height);
-  setStatus('📍 Bouche à ' + Math.round(mouthX) + ', ' + Math.round(mouthY), 'info');
-  dessiner();
-});
-
-// ============================================================
-// Utilitaires
-// ============================================================
-function setStatus(msg, type){
-  statusEl.textContent = msg;
-  statusEl.className = 'status ' + (type || '');
-  console.log('[V&B] ' + msg);
-}
-
-// ============================================================
-// Google TTS (voix capturable)
-// ============================================================
-function getTtsUrl(text, lang){
-  return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' +
-         lang + '&q=' + encodeURIComponent(text);
-}
-
-async function prepareAudio(){
-  var texte = texteEl.value.trim();
-  if (!texte) throw new Error('Texte vide');
-
-  // Découpe en morceaux (max ~180 caractères par requête)
-  var morceaux = [];
-  var words = texte.split(/\s+/);
-  var cur = '';
-  for (var i = 0; i < words.length; i++){
-    if ((cur + ' ' + words[i]).trim().length > 180){
-      morceaux.push(cur.trim());
-      cur = words[i];
-    } else {
-      cur = (cur + ' ' + words[i]).trim();
-    }
-  }
-  if (cur) morceaux.push(cur);
-
-  var blobs = [];
-  for (var k = 0; k < morceaux.length; k++){
-    var url = getTtsUrl(morceaux[k], voixEl.value);
-    var res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    blobs.push(await res.blob());
-  }
-
-  var blob = new Blob(blobs, { type: 'audio/mpeg' });
-  return URL.createObjectURL(blob);
-}
-
-// ============================================================
-// Dessin de la bouche
-// ============================================================
-function dessinerSur(g, W, H){
-  var taille = Number(tailleEl.value);
-  var sens = Number(sensEl.value);
-
-  var ouv = 0;
-  if (currentVolume > 0.02){
-    ouv = Math.min(1, currentVolume * sens);
-    ouv += Math.random() * 0.15 * ouv;
-    ouv = Math.min(1, ouv);
-  }
-
-  var largeur = taille * (0.85 + 0.15 * ouv);
-  var hauteur = taille * 0.65 * ouv;
-
-  if (hauteur > 1){
-    // Ombre
-    g.save();
-    g.beginPath();
-    g.ellipse(mouthX, mouthY + 3, largeur/2, hauteur/2 + 2, 0, 0, Math.PI*2);
-    g.fillStyle = 'rgba(0,0,0,0.35)';
-    g.filter = 'blur(4px)';
-    g.fill();
-    g.restore();
-
-    // Intérieur sombre
-    g.beginPath();
-    g.ellipse(mouthX, mouthY, largeur/2, hauteur/2, 0, 0, Math.PI*2);
-    g.fillStyle = '#2a0808';
-    g.fill();
-
-    // Contour
-    g.strokeStyle = 'rgba(0,0,0,0.75)';
-    g.lineWidth = Math.max(1.5, taille * 0.05);
-    g.stroke();
-
-    // Langue
-    if (hauteur > taille * 0.3){
-      g.beginPath();
-      g.ellipse(mouthX, mouthY + hauteur*0.18,
-                largeur*0.35, hauteur*0.22, 0, 0, Math.PI*2);
-      g.fillStyle = '#8b3030';
-      g.fill();
-    }
-
-    // Dents
-    if (hauteur > taille * 0.25){
-      g.fillStyle = 'rgba(255,240,220,0.85)';
-      var dentsY = mouthY - hauteur/2 + 1;
-      var nb = 4;
-      var lw = largeur * 0.7 / nb;
-      var sx = mouthX - largeur * 0.35;
-      for (var d = 0; d < nb; d++){
-        g.fillRect(sx + d*lw + 1, dentsY, lw - 2, hauteur*0.12);
-      }
-    }
-  }
-}
-
-function dessiner(){
-  if (!image) return;
-  var W = canvas.width;
-  var H = canvas.height;
-
-  ctx.drawImage(image, 0, 0, W, H);
-  dessinerSur(ctx, W, H);
-
-  // Marqueur quand inactif
-  if (!isSpeaking && !isRecording){
-    var taille = Number(tailleEl.value);
-    ctx.strokeStyle = 'rgba(255,100,100,0.55)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.arc(mouthX, mouthY, taille * 0.7, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-}
-
-// ============================================================
-// Écoute
-// ============================================================
-speakBtn.addEventListener('click', async function(){
-  if (isSpeaking){
-    if (audioEl) audioEl.pause();
-    stopLoop();
+  /* ============================================================
+     VÉRIFICATION SUPPORT
+     ============================================================ */
+  if (!synth || typeof SpeechSynthesisUtterance === "undefined") {
+    statusEl.textContent = "Synthèse vocale non supportée par ce navigateur";
+    statusEl.style.color = "#ef4444";
+    [speakBtn,pauseBtn,resumeBtn,stopBtn].forEach(b=>{
+      b.disabled = true;
+    });
     return;
   }
 
-  try {
-    speakBtn.disabled = true;
-    speakBtn.textContent = '⏳ Préparation...';
-
-    // Reset cache si texte changé
-    if (!currentAudioUrl){
-      setStatus('⏳ Chargement de la voix...', 'info');
-      currentAudioUrl = await prepareAudio();
-    }
-
-    // AudioContext
-    if (!audioContext){
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.state === 'suspended') await audioContext.resume();
-
-    if (audioEl) audioEl.pause();
-    audioEl = new Audio(currentAudioUrl);
-    audioEl.playbackRate = Number(vitEl.value);
-
-    var source = audioContext.createMediaElementSource(audioEl);
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.7;
-    source.connect(analyser);
-    source.connect(audioContext.destination);
-
-    audioEl.addEventListener('ended', function(){
-      stopLoop();
-      setStatus('✅ Lecture terminée', 'success');
-    });
-
-    isSpeaking = true;
-    speakBtn.textContent = '⏸ Stop';
-    speakBtn.disabled = false;
-    setStatus('🔊 Lecture...', 'info');
-
-    await audioEl.play();
-    startLoop();
-
-  } catch (err){
-    console.error(err);
-    setStatus('❌ ' + err.message, 'error');
-    stopLoop();
-  }
-});
-
-function startLoop(){
-  function loop(){
-    if (analyser){
-      var data = new Uint8Array(analyser.frequencyBinCount);
-      analyser.getByteFrequencyData(data);
-      var s = 0;
-      for (var i = 0; i < data.length; i++) s += data[i];
-      currentVolume = s / data.length / 255;
-    }
-    dessiner();
-    if (isSpeaking || isRecording) rafId = requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-function stopLoop(){
-  isSpeaking = false;
-  if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
-  speakBtn.textContent = '🔊 Écouter';
-  speakBtn.disabled = false;
-  currentVolume = 0;
-  dessiner();
-}
-
-// ============================================================
-// Enregistrement vidéo + audio
-// ============================================================
-recBtn.addEventListener('click', async function(){
-  if (isRecording || !image) return;
-  if (typeof MediaRecorder === 'undefined'){
-    setStatus('❌ MediaRecorder non supporté', 'error');
-    return;
+  /* ============================================================
+     UTILITAIRES
+     ============================================================ */
+  function setStatus(msg, color){
+    statusEl.textContent = msg;
+    statusEl.style.color = color || "#22c55e";
   }
 
-  try {
-    recBtn.disabled = true;
-    speakBtn.disabled = true;
-    recBtn.textContent = '⏳ Préparation...';
-    dl.style.display = 'none';
+  function updateCharCount(){
+    const n = textEl.value.length;
+    charCountEl.textContent = n + (n > 1 ? " caractères" : " caractère");
+  }
 
-    if (!currentAudioUrl){
-      setStatus('⏳ Génération de la voix...', 'info');
-      currentAudioUrl = await prepareAudio();
-    }
+  function getSelectedVoice(){
+    if (!voiceSelect.value) return null;
+    const [name, lang] = voiceSelect.value.split("||");
+    return voices.find(v => v.name === name && v.lang === lang) || null;
+  }
 
-    if (!audioContext){
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.state === 'suspended') await audioContext.resume();
-
-    // Audio
-    var audio = new Audio(currentAudioUrl);
-    audio.playbackRate = Number(vitEl.value);
-    var src = audioContext.createMediaElementSource(audio);
-    var an = audioContext.createAnalyser();
-    an.fftSize = 256;
-    an.smoothingTimeConstant = 0.7;
-    var dest = audioContext.createMediaStreamDestination();
-
-    src.connect(an);
-    src.connect(dest);
-    src.connect(audioContext.destination);
-
-    analyser = an;
-
-    // Canvas de rendu (mêmes dimensions que l'image)
-    var W = image.width;
-    var H = image.height;
-    var rc = document.createElement('canvas');
-    rc.width = W; rc.height = H;
-    var rctx = rc.getContext('2d');
-
-    // Stream vidéo
-    var stream = rc.captureStream(30);
-    // Ajoute la piste audio
-    var at = dest.stream.getAudioTracks()[0];
-    if (at) stream.addTrack(at);
-
-    // Codec
-    var mime = '';
-    var mimes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
-    for (var i = 0; i < mimes.length; i++){
-      if (MediaRecorder.isTypeSupported(mimes[i])){ mime = mimes[i]; break; }
-    }
-
-    var recorder = new MediaRecorder(stream, {
-      mimeType: mime,
-      videoBitsPerSecond: 5000000
+  /* ============================================================
+     PROFILS
+     ============================================================ */
+  function renderProfiles(){
+    profilesEl.innerHTML = "";
+    PROFILES.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "profile" + (p.id === currentProfileId ? " active" : "");
+      div.dataset.id = p.id;
+      div.innerHTML = '<span class="emoji">'+p.emoji+'</span>'+p.name;
+      div.addEventListener("click", ()=> applyProfile(p.id));
+      profilesEl.appendChild(div);
     });
+  }
 
-    var chunks = [];
-    recorder.ondataavailable = function(e){
-      if (e.data && e.data.size > 0) chunks.push(e.data);
-    };
+  function applyProfile(id){
+    const p = PROFILES.find(x => x.id === id);
+    if (!p) return;
+    currentProfileId = id;
 
-    var stopPromise = new Promise(function(r){ recorder.onstop = r; });
+    rateEl.value   = p.rate;
+    pitchEl.value  = p.pitch;
+    volumeEl.value = p.volume;
 
-    recorder.start();
-    isRecording = true;
-    recBtn.textContent = '⏺ Enregistrement...';
-    setStatus('🎬 Enregistrement en cours...', 'info');
+    rateValue.textContent   = p.rate.toFixed(1);
+    pitchValue.textContent  = p.pitch.toFixed(1);
+    volumeValue.textContent = p.volume.toFixed(2);
 
-    // Lance l'audio
-    await audio.play();
-
-    // Boucle de rendu sur le canvas de rendu
-    function renderLoop(){
-      var data = new Uint8Array(an.frequencyBinCount);
-      an.getByteFrequencyData(data);
-      var s = 0;
-      for (var i = 0; i < data.length; i++) s += data[i];
-      currentVolume = s / data.length / 255;
-
-      // Dessine sur le canvas de rendu
-      rctx.drawImage(image, 0, 0, W, H);
-      dessinerSur(rctx, W, H);
-
-      // Aperçu dans le canvas visible (adapté en taille)
-      canvas.width = W; canvas.height = H;
-      ctx.drawImage(rc, 0, 0, W, H);
-
-      // Statut
-      var pct = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
-      setStatus('🎬 Enregistrement — ' + Math.round(audio.currentTime) + 's / ' +
-                (audio.duration ? Math.round(audio.duration) + 's' : '?') +
-                ' (' + Math.round(pct) + '%)', 'info');
-
-      if (isRecording && !audio.paused){
-        rafId = requestAnimationFrame(renderLoop);
-      }
-    }
-    renderLoop();
-
-    // Fin
-    audio.addEventListener('ended', function(){
-      setTimeout(function(){
-        if (recorder.state === 'recording') recorder.stop();
-      }, 200);
+    document.querySelectorAll(".profile").forEach(el=>{
+      el.classList.toggle("active", el.dataset.id === id);
     });
+  }
 
-    await stopPromise;
+  /* ============================================================
+     VOIX SYSTÈME
+     ============================================================ */
+  function populateVoices(){
+    voices = synth.getVoices();
+    const current = voiceSelect.value;
+    voiceSelect.innerHTML = "";
 
-    stream.getTracks().forEach(function(tr){ tr.stop(); });
-    isRecording = false;
-
-    if (chunks.length === 0){
-      setStatus('❌ Aucune donnée vidéo', 'error');
-      resetRecBtn();
+    if (!voices.length) {
+      const o = document.createElement("option");
+      o.textContent = "Aucune voix détectée";
+      o.disabled = true;
+      voiceSelect.appendChild(o);
       return;
     }
 
-    var blob = new Blob(chunks, { type: mime.split(';')[0] });
-    var url = URL.createObjectURL(blob);
+    const groups = {};
+    voices.forEach(v=>{
+      const lang = v.lang || "??";
+      (groups[lang] = groups[lang] || []).push(v);
+    });
 
-    dl.href = url;
-    dl.style.display = 'block';
-    setStatus('✅ Vidéo prête ! ' + Math.round(blob.size/1024) + ' Ko', 'success');
-    resetRecBtn();
+    Object.keys(groups).sort().forEach(lang=>{
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = lang;
+      groups[lang].forEach(v=>{
+        const o = document.createElement("option");
+        o.value = v.name + "||" + v.lang;
+        o.textContent = v.name + (v.default ? " — par défaut" : "") + " (" + v.lang + ")";
+        optgroup.appendChild(o);
+      });
+      voiceSelect.appendChild(optgroup);
+    });
 
-  } catch (err){
-    console.error(err);
-    setStatus('❌ ' + err.message, 'error');
-    isRecording = false;
-    resetRecBtn();
+    if (current &&
+        Array.from(voiceSelect.options).some(o=>o.value===current)) {
+      voiceSelect.value = current;
+    } else {
+      const def = voices.find(v=>v.default) || voices[0];
+      voiceSelect.value = def.name + "||" + def.lang;
+    }
   }
-});
 
-function resetRecBtn(){
-  recBtn.disabled = false;
-  speakBtn.disabled = false;
-  recBtn.textContent = '⏺ Enregistrer vidéo';
-}
+  /* ============================================================
+     CONTRÔLES DE LECTURE
+     ============================================================ */
+  function speak(){
+    const text = textEl.value.trim();
+    if (!text){
+      setStatus("Écris d'abord un texte.", "#f59e0b");
+      return;
+    }
 
-// Reset du cache quand on change le texte ou la langue
-texteEl.addEventListener('input', function(){ currentAudioUrl = null; });
-voixEl.addEventListener('change', function(){ currentAudioUrl = null; });
+    // Coupe toute lecture en cours
+    if (synth.speaking || synth.pending) synth.cancel();
 
-console.log('=== Prêt ===');
+    const u = new SpeechSynthesisUtterance(text);
+    const v = getSelectedVoice();
+    if (v) u.voice = v;
+
+    u.rate   = parseFloat(rateEl.value);
+    u.pitch  = parseFloat(pitchEl.value);
+    u.volume = parseFloat(volumeEl.value);
+    u.lang   = v ? v.lang : "fr-FR";
+
+    u.onstart  = ()=> setStatus("Lecture en cours...", "#22c55e");
+    u.onend    = ()=> setStatus("Terminé", "#22c55e");
+    u.onpause  = ()=> setStatus("En pause", "#f59e0b");
+    u.onresume = ()=> setStatus("Reprise...", "#22c55e");
+    u.onerror  = e => setStatus("Erreur : " + (e.error||"inconnue"), "#ef4444");
+
+    synth.speak(u);
+  }
+
+  function pause(){
+    if (synth.speaking && !synth.paused){
+      synth.pause();
+      setStatus("En pause", "#f59e0b");
+    }
+  }
+
+  function resume(){
+    if (synth.paused){
+      synth.resume();
+      setStatus("Reprise...", "#22c55e");
+    }
+  }
+
+  function stop(){
+    if (synth.speaking || synth.pending || synth.paused){
+      synth.cancel();
+      setStatus("Arrêté", "#f59e0b");
+    }
+  }
+
+  /* ============================================================
+     ÉVÉNEMENTS
+     ============================================================ */
+  rateEl.addEventListener("input", ()=>{
+    rateValue.textContent = parseFloat(rateEl.value).toFixed(1);
+    // Si l'utilisateur change manuellement, on retire l'état "profil actif"
+    document.querySelectorAll(".profile").forEach(el=>el.classList.remove("active"));
+    currentProfileId = "";
+  });
+  pitchEl.addEventListener("input", ()=>{
+    pitchValue.textContent = parseFloat(pitchEl.value).toFixed(1);
+    document.querySelectorAll(".profile").forEach(el=>el.classList.remove("active"));
+    currentProfileId = "";
+  });
+  volumeEl.addEventListener("input", ()=>{
+    volumeValue.textContent = parseFloat(volumeEl.value).toFixed(2);
+    document.querySelectorAll(".profile").forEach(el=>el.classList.remove("active"));
+    currentProfileId = "";
+  });
+
+  textEl.addEventListener("input", updateCharCount);
+  textEl.addEventListener("keydown", e=>{
+    if ((e.ctrlKey||e.metaKey) && e.key === "Enter"){
+      e.preventDefault();
+      speak();
+    }
+  });
+
+  speakBtn.addEventListener("click", speak);
+  pauseBtn.addEventListener("click", pause);
+  resumeBtn.addEventListener("click", resume);
+  stopBtn.addEventListener("click", stop);
+
+  // Arrêt automatique si on ferme la page
+  window.addEventListener("beforeunload", ()=> synth.cancel());
+
+  /* ============================================================
+     INITIALISATION
+     ============================================================ */
+  renderProfiles();
+  applyProfile("normal");
+  populateVoices();
+
+  if (typeof synth.onvoiceschanged !== "undefined"){
+    synth.onvoiceschanged = populateVoices;
+  }
+  // Certains navigateurs chargent les voix en différé
+  setTimeout(populateVoices, 200);
+  setTimeout(populateVoices, 800);
+  setTimeout(populateVoices, 1500);
+
+  updateCharCount();
+  setStatus("Prêt");
 })();
 </script>
 </body>
-  </html>
+</html>
