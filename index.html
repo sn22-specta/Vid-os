@@ -2,508 +2,712 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt2Video</title>
+<title>Voix & Bouche</title>
 <style>
 :root{
   --bg:#0b0d12;--bg-elev:#12151d;--bg-elev-2:#181c27;
   --border:#262c3d;--text:#e8ecf4;--text-dim:#9aa4b8;--text-faint:#626b80;
   --accent:#7c5cff;--accent-grad:linear-gradient(135deg,#7c5cff,#22d3ee);
-  --radius:14px;--radius-sm:10px;--font:'Inter',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);
-  min-height:100vh;padding:32px 24px;
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  padding:24px;min-height:100vh;
   background-image:
     radial-gradient(1200px 600px at 10% -10%,rgba(124,92,255,.12),transparent 60%),
     radial-gradient(1000px 500px at 100% 0%,rgba(34,211,238,.08),transparent 55%);}
-.app{max-width:1200px;margin:0 auto}
-h1{text-align:center;font-size:2rem;margin-bottom:6px;
+.app{max-width:900px;margin:0 auto}
+h1{text-align:center;font-size:1.8rem;margin-bottom:6px;
   background:var(--accent-grad);-webkit-background-clip:text;
   -webkit-text-fill-color:transparent;font-weight:800}
-.sub{text-align:center;color:var(--text-dim);margin-bottom:24px;font-size:.95rem}
-.token-bar{background:var(--bg-elev);border:1px solid var(--border);
-  border-radius:var(--radius);padding:14px 18px;margin-bottom:24px;
-  display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.token-bar.ok{border-color:rgba(46,204,143,.5);background:rgba(46,204,143,.08)}
-.token-bar label{font-size:.85rem;color:var(--text-dim);font-weight:600;white-space:nowrap}
-.token-bar input{flex:1;min-width:200px;background:var(--bg-elev-2);
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  color:var(--text);font-family:var(--font);font-size:.9rem;padding:10px 12px;outline:none}
-.token-bar input:focus{border-color:var(--accent)}
-.token-bar button{background:var(--accent-grad);border:none;color:#fff;
-  font-family:inherit;font-size:.85rem;font-weight:700;padding:10px 18px;
-  border-radius:var(--radius-sm);cursor:pointer;transition:transform .15s}
-.token-bar button:hover{transform:translateY(-1px)}
-.token-bar .hint{font-size:.78rem;color:var(--text-faint);width:100%;margin-top:4px}
-.token-bar .hint a{color:var(--accent);text-decoration:none}
-.token-bar .hint a:hover{text-decoration:underline}
-#tokenFeedback{display:none;width:100%;margin-top:8px;font-size:.85rem;
-  font-weight:600;padding:10px 14px;border-radius:8px}
-#tokenFeedback.show{display:block}
-#tokenFeedback.ok{background:rgba(46,204,143,.15);color:#2ecc8f;border:1px solid rgba(46,204,143,.5)}
-#tokenFeedback.err{background:rgba(255,93,108,.15);color:#ff5d6c;border:1px solid rgba(255,93,108,.5)}
-#tokenFeedback.warn{background:rgba(250,204,21,.15);color:#facc15;border:1px solid rgba(250,204,21,.5)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
-@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.sub{text-align:center;color:var(--text-dim);font-size:.9rem;margin-bottom:24px}
 .panel{background:var(--bg-elev);border:1px solid var(--border);
-  border-radius:var(--radius);padding:22px}
-label{display:block;font-size:.85rem;color:var(--text-dim);font-weight:600;margin-bottom:8px}
-.dropzone{position:relative;border:2px dashed var(--border);
-  border-radius:var(--radius);padding:30px 20px;text-align:center;
-  cursor:pointer;transition:border-color .2s,background .2s;
-  background:var(--bg-elev-2);margin-bottom:16px;min-height:200px;
-  display:flex;align-items:center;justify-content:center;flex-direction:column}
-.dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:rgba(124,92,255,.08)}
-.dropzone input[type=file]{display:none}
-.dropzone .dz-icon{font-size:2.4rem;margin-bottom:10px;opacity:.7}
-.dropzone .dz-text{color:var(--text-dim);font-size:.9rem}
-.dropzone .dz-hint{color:var(--text-faint);font-size:.78rem;margin-top:6px}
-.dropzone img{max-width:100%;max-height:340px;border-radius:var(--radius-sm);display:block}
-.dropzone.has-image{padding:12px;border-style:solid}
-textarea{width:100%;background:var(--bg-elev-2);border:1px solid var(--border);
-  border-radius:var(--radius-sm);color:var(--text);font-family:inherit;
-  font-size:.95rem;padding:12px;min-height:110px;resize:vertical;
-  outline:none;margin-bottom:16px;line-height:1.5}
-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.18)}
-button.primary{width:100%;border:none;border-radius:var(--radius-sm);
-  background:var(--accent-grad);color:#fff;font-family:inherit;
-  font-size:1rem;font-weight:700;padding:15px;cursor:pointer;
-  transition:transform .2s,box-shadow .2s;
-  box-shadow:0 6px 20px rgba(124,92,255,.35);
-  display:flex;align-items:center;justify-content:center;gap:10px}
-button.primary:hover:not(:disabled){transform:translateY(-2px)}
-button.primary:disabled{opacity:.6;cursor:not-allowed}
-.spinner{display:none;width:18px;height:18px;
-  border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;
-  border-radius:50%;animation:spin .7s linear infinite}
-button.primary.loading .spinner{display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.stage{background:var(--bg-elev-2);border:1px dashed var(--border);
-  border-radius:var(--radius);min-height:340px;display:flex;
-  align-items:center;justify-content:center;overflow:hidden;margin-bottom:14px}
-.stage video{width:100%;max-height:420px;background:#000;display:block}
-.stage .ph{text-align:center;color:var(--text-faint);padding:60px 20px}
-.stage .ph .icon{font-size:3rem;margin-bottom:10px;opacity:.6}
-.status{font-size:.88rem;padding:10px 14px;border-radius:var(--radius-sm);
+  border-radius:14px;padding:20px;margin-bottom:16px}
+.section-title{font-size:.72rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--accent);margin-bottom:10px;
+  display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+label{display:block;font-size:.85rem;color:var(--text-dim);
+  font-weight:600;margin-bottom:6px}
+.dropzone{display:block;border:2px dashed var(--border);
+  border-radius:10px;padding:24px;text-align:center;
+  cursor:pointer;transition:all .2s;background:var(--bg-elev-2)}
+.dropzone:hover{border-color:var(--accent);background:rgba(124,92,255,.08)}
+.dropzone input{position:absolute;left:-9999px}
+.dropzone .icon{font-size:2rem;margin-bottom:6px;opacity:.7}
+.dropzone .txt{color:var(--text-dim);font-size:.85rem}
+canvas{background:#000;max-width:100%;display:block;border-radius:10px;
+  cursor:crosshair;margin:0 auto}
+textarea,.preset{width:100%;background:var(--bg-elev-2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:inherit;font-size:.9rem;
+  padding:11px;outline:none;line-height:1.5}
+textarea{min-height:80px;resize:vertical}
+textarea:focus,.preset:focus{border-color:var(--accent)}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:8px;margin-bottom:12px}
+.preset{background:var(--bg-elev-2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text-dim);font-size:.78rem;padding:9px 11px;
+  cursor:pointer;transition:all .2s;text-align:left;font-weight:600}
+.preset:hover{border-color:var(--accent);color:var(--text);background:rgba(124,92,255,.1)}
+.row{margin-bottom:12px}
+.row-head{display:flex;justify-content:space-between;align-items:center;
+  font-size:.82rem;color:var(--text-dim);font-weight:600;margin-bottom:5px}
+.row-head .val{color:var(--accent);font-family:ui-monospace,monospace;font-size:.82rem}
+select,input[type=range]{width:100%}
+select{background:var(--bg-elev-2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:.88rem;padding:10px;outline:none;
+  cursor:pointer}
+input[type=range]{-webkit-appearance:none;height:5px;background:var(--bg-elev-2);
+  border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  background:var(--accent-grad);border-radius:50%;cursor:pointer;
+  box-shadow:0 2px 8px rgba(124,92,255,.5)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#7c5cff;
+  border:none;border-radius:50%;cursor:pointer}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button{flex:1;min-width:120px;padding:13px;font-size:.9rem;font-weight:700;
+  border:none;border-radius:8px;color:#fff;cursor:pointer;
+  background:var(--accent-grad);transition:all .2s;
+  box-shadow:0 4px 14px rgba(124,92,255,.3);
+  display:flex;align-items:center;justify-content:center;gap:6px}
+button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,92,255,.5)}
+button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+button.alt{background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim)}
+button.alt:hover:not(:disabled){border-color:var(--border);color:var(--text);background:var(--bg-elev-2)}
+button.rec{background:linear-gradient(135deg,#ff5d6c,#ff8c42);
+  box-shadow:0 4px 14px rgba(255,93,108,.3)}
+.status{font-size:.85rem;padding:10px 14px;border-radius:8px;
   background:var(--bg-elev-2);border:1px solid var(--border);
-  color:var(--text-dim);min-height:20px;white-space:pre-wrap}
-.status:empty{display:none}
+  color:var(--text-dim);margin-top:12px;min-height:20px}
 .status.info{color:#58a6ff;border-color:rgba(88,166,255,.35);background:rgba(88,166,255,.08)}
 .status.success{color:#2ecc8f;border-color:rgba(46,204,143,.35);background:rgba(46,204,143,.08)}
 .status.error{color:#ff5d6c;border-color:rgba(255,93,108,.4);background:rgba(255,93,108,.08)}
-.status.warn{color:#facc15;border-color:rgba(250,204,21,.4);background:rgba(250,204,21,.08)}
-.log{background:#000;color:#9aa4b8;font-family:ui-monospace,monospace;
-  font-size:.75rem;padding:12px;border-radius:var(--radius-sm);
-  max-height:180px;overflow-y:auto;margin-top:14px;line-height:1.6;
-  border:1px solid var(--border)}
-.log .ok{color:#2ecc8f}
-.log .err{color:#ff5d6c}
-.log .warn{color:#facc15}
-.log .info{color:#58a6ff}
+#dl{display:none;margin-top:12px;padding:12px;background:rgba(46,204,143,.15);
+  border:1px solid rgba(46,204,143,.4);border-radius:8px;color:#2ecc8f;
+  text-decoration:none;font-weight:600;text-align:center;font-size:.88rem}
+#dl:hover{background:rgba(46,204,143,.25)}
+.tip{font-size:.72rem;color:var(--text-faint);font-style:italic;margin-top:4px}
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>🎬 Prompt2Video</h1>
-  <p class="sub">Envoie une image + un prompt, l'IA anime la scène.</p>
+  <h1>👄🎙️ Voix & Bouche</h1>
+  <p class="sub">Choisis un texte, règle la voix, anime ta bouche, enregistre la vidéo.</p>
 
-  <div id="tokenBar" class="token-bar">
-    <label for="tokenInput">🔑 Clé Replicate</label>
-    <input id="tokenInput" type="password" placeholder="r8_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-    <button id="saveToken" type="button">Enregistrer</button>
-    <div id="tokenFeedback"></div>
-    <div class="hint">
-      Obtiens une clé gratuite sur
-      <a href="https://replicate.com/account/api-tokens" target="_blank" rel="noopener">
-        replicate.com/account/api-tokens
-      </a>
-      — elle est sauvegardée uniquement dans ton navigateur.
+  <!-- ÉTAPE 1 : Image -->
+  <div class="panel">
+    <div class="section-title">📸 1. Image</div>
+    <label class="dropzone" for="f">
+      <input type="file" id="f" accept="image/*">
+      <div class="icon">🖼️</div>
+      <div class="txt">Choisis une image de visage</div>
+    </label>
+    <canvas id="c" width="640" height="480" style="display:none"></canvas>
+    <div class="tip" id="posTip" style="display:none">
+      👆 Clique sur la bouche dans l'image pour la positionner
     </div>
   </div>
 
-  <div class="grid">
-    <section class="panel">
-      <label>1. Image de départ</label>
-      <div id="dropzone" class="dropzone">
-        <input type="file" id="fileInput" accept="image/*">
-        <div class="dz-icon">🖼️</div>
-        <div class="dz-text">Clique ou glisse une image ici</div>
-        <div class="dz-hint">JPG, PNG, WebP</div>
+  <!-- ÉTAPE 2 : Texte -->
+  <div class="panel">
+    <div class="section-title">✍️ 2. Ce que la personne dit</div>
+
+    <div class="presets" id="presets">
+      <button class="preset" data-tone="joyeux">😄 Joyeux</button>
+      <button class="preset" data-tone="neutre">😐 Neutre</button>
+      <button class="preset" data-tone="serieux">😎 Sérieux</button>
+      <button class="preset" data-tone="amical">😊 Amical</button>
+      <button class="preset" data-tone="promo">📢 Pub</button>
+      <button class="preset" data-tone="histoire">📖 Histoire</button>
+      <button class="preset" data-tone="surprise">😲 Surprise</button>
+      <button class="preset" data-tone="amour">💕 Doux</button>
+    </div>
+
+    <textarea id="texte" placeholder="Écris ton texte ici...">Bonjour ! Je suis une image qui parle. Grâce à cette application, ma bouche bouge en rythme avec ma voix. Choisis un texte ou écris le tien, ajuste la vitesse, et regarde le résultat.</textarea>
+    <div class="tip">💡 Clique sur un des boutons ci-dessus pour insérer un texte prêt à l'emploi, ou écris le tien.</div>
+  </div>
+
+  <!-- ÉTAPE 3 : Voix -->
+  <div class="panel">
+    <div class="section-title">🎵 3. Paramètres de la voix</div>
+
+    <div class="row">
+      <label>Langue</label>
+      <select id="voix">
+        <option value="fr">🇫🇷 Français</option>
+        <option value="en">🇬🇧 Anglais</option>
+        <option value="es">🇪🇸 Espagnol</option>
+        <option value="de">🇩🇪 Allemand</option>
+        <option value="it">🇮🇹 Italien</option>
+        <option value="pt">🇵🇹 Portugais</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <div class="row-head">
+        <span>Vitesse de parole</span>
+        <span class="val" id="vitVal">1.0×</span>
       </div>
+      <input type="range" id="vit" min="0.5" max="2" step="0.1" value="1">
+    </div>
 
-      <label for="prompt">2. Décris le mouvement</label>
-      <textarea id="prompt"
-        placeholder="Ex : L'oiseau bat des ailes et s'envole vers le ciel"></textarea>
-
-      <button id="generate" class="primary" type="button">
-        <span class="spinner"></span>
-        <span class="label">Générer la vidéo</span>
-      </button>
-
-      <div id="log" class="log" style="display:none"></div>
-    </section>
-
-    <section class="panel">
-      <label>Résultat</label>
-      <div id="stage" class="stage">
-        <div class="ph">
-          <div class="icon">🎞️</div>
-          <p>La vidéo apparaîtra ici</p>
-        </div>
+    <div class="row">
+      <div class="row-head">
+        <span>Taille de la bouche</span>
+        <span class="val" id="tailleVal">50</span>
       </div>
-      <div id="status" class="status"></div>
-    </section>
+      <input type="range" id="taille" min="15" max="150" value="50">
+    </div>
+
+    <div class="row">
+      <div class="row-head">
+        <span>Sensibilité au son</span>
+        <span class="val" id="sensVal">3</span>
+      </div>
+      <input type="range" id="sens" min="1" max="10" step="0.5" value="3">
+    </div>
+  </div>
+
+  <!-- ÉTAPE 4 : Actions -->
+  <div class="panel">
+    <div class="section-title">🎬 4. Actions</div>
+    <div class="btns">
+      <button id="speakBtn" disabled>🔊 Écouter</button>
+      <button id="recBtn" class="rec" disabled>⏺ Enregistrer vidéo</button>
+    </div>
+    <div class="status" id="status">Charge une image pour commencer.</div>
+    <a id="dl" download="parlant.webm">⬇️ Télécharger la vidéo</a>
   </div>
 </div>
 
 <script>
 (function(){
-  'use strict';
+'use strict';
 
-  // ============================================================
-  // Configuration
-  // ============================================================
-  var MODEL_OWNER = 'stability-ai';
-  var MODEL_NAME  = 'stable-video-diffusion-img2vid-xt';
+console.log('=== Voix & Bouche démarré ===');
 
-  // Proxy CORS : la requête passe par un service qui ajoute
-  // les en-têtes Access-Control-Allow-Origin manquants.
-  var CORS_PROXY = 'https://corsproxy.io/?url=';
+// ============================================================
+// DOM
+// ============================================================
+var input = document.getElementById('f');
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+var presetsEl = document.getElementById('presets');
+var texteEl = document.getElementById('texte');
+var voixEl = document.getElementById('voix');
+var vitEl = document.getElementById('vit');
+var vitVal = document.getElementById('vitVal');
+var tailleEl = document.getElementById('taille');
+var tailleVal = document.getElementById('tailleVal');
+var sensEl = document.getElementById('sens');
+var sensVal = document.getElementById('sensVal');
+var speakBtn = document.getElementById('speakBtn');
+var recBtn = document.getElementById('recBtn');
+var statusEl = document.getElementById('status');
+var dl = document.getElementById('dl');
+var posTip = document.getElementById('posTip');
 
-  var REPLICATE_BASE = 'https://api.replicate.com/v1';
+// ============================================================
+// État
+// ============================================================
+var image = null;
+var mouthX = -1;
+var mouthY = -1;
+var audioContext = null;
+var analyser = null;
+var audioEl = null;
+var currentAudioUrl = null;
+var currentVolume = 0;
+var isSpeaking = false;
+var isRecording = false;
+var rafId = null;
 
-  // ============================================================
-  // Références DOM
-  // ============================================================
-  var tokenBar    = document.getElementById('tokenBar');
-  var tokenInput  = document.getElementById('tokenInput');
-  var saveBtn     = document.getElementById('saveToken');
-  var feedbackEl  = document.getElementById('tokenFeedback');
-  var dropzone    = document.getElementById('dropzone');
-  var fileInput   = document.getElementById('fileInput');
-  var promptEl    = document.getElementById('prompt');
-  var btn         = document.getElementById('generate');
-  var stage       = document.getElementById('stage');
-  var statusEl    = document.getElementById('status');
-  var logEl       = document.getElementById('log');
+// ============================================================
+// Textes prédéfinis par tonalité (je les ai écrits pour toi)
+// ============================================================
+var PRESETS = {
+  joyeux: [
+    "Bonjour tout le monde ! Quelle journée magnifique ! Je suis super content de vous voir, et j'espère que vous passez une excellente journée !",
+    "Youpi ! On a réussi ! C'est génial, je n'y croyais pas ! Bravo à tous, on a fait du super boulot !",
+    "Salut ! Bienvenue dans cette superbe aventure ! Prépare-toi, ça va être incroyable !"
+  ],
+  neutre: [
+    "Bonjour. Je suis une image qui parle. Ma bouche bouge en rythme avec ma voix. Ceci est une démonstration.",
+    "Bienvenue. Ceci est un test de synchronisation labiale. La bouche s'ouvre et se ferme selon le volume du son.",
+    "Voici une phrase neutre, sans émotion particulière. Elle sert à tester le rendu standard."
+  ],
+  serieux: [
+    "Mesdames, messieurs, bonjour. Nous sommes réunis aujourd'hui pour présenter une nouvelle technologie.",
+    "Il est important de prendre ce sujet au sérieux. Les conséquences pourraient être considérables.",
+    "Je vais vous exposer les faits. Prenez le temps d'écouter attentivement chaque point."
+  ],
+  amical: [
+    "Salut ! Comment ça va ? Ça fait plaisir de te voir ! Raconte-moi tout, qu'est-ce que tu deviens ?",
+    "Coucou ! J'espère que tout va bien pour toi. Passe une super journée, à très bientôt !",
+    "Hey ! Bienvenue ! Installe-toi, mets-toi à l'aise, on va passer un bon moment ensemble."
+  ],
+  promo: [
+    "Ne manquez pas cette offre exceptionnelle ! Pour une durée limitée seulement, profitez de moins cinquante pour cent de réduction !",
+    "Découvrez notre nouveau produit révolutionnaire ! Simple, rapide, efficace. Commandez dès maintenant !",
+    "Une offre unique, un prix imbattable, une qualité incomparable. Réservez votre place dès aujourd'hui !"
+  ],
+  histoire: [
+    "Il était une fois, dans un royaume lointain, une jeune fille qui rêvait d'aventures extraordinaires.",
+    "Par une nuit sombre et orageuse, un mystérieux voyageur frappa à la porte du vieux château.",
+    "Bien des années auparavant, dans un petit village au bord de la mer, vivait un pêcheur solitaire."
+  ],
+  surprise: [
+    "Oh là là ! Incroyable ! Je n'en reviens pas ! Regardez ça, c'est absolument phénoménal !",
+    "Attends... Quoi ?! Tu es sérieux ?! Je ne m'attendais vraiment pas à ça !",
+    "Waouh ! C'est fou ! Comment est-ce possible ?! Je suis stupéfait !"
+  ],
+  amour: [
+    "Mon amour, chaque jour passé près de toi est un cadeau. Tu es la lumière de ma vie.",
+    "Je t'aime plus que tout au monde. Tu es la personne la plus précieuse à mes yeux.",
+    "Doucement, tendrement, je te murmure ces mots. Tu es tout pour moi, pour toujours."
+  ]
+};
 
-  var selectedFile = null;
-  var isGenerating = false;
-  var memoryToken  = '';
+// ============================================================
+// Boutons de texte prédéfini
+// ============================================================
+presetsEl.addEventListener('click', function(e){
+  var b = e.target.closest('.preset');
+  if (!b) return;
+  var tone = b.dataset.tone;
+  var list = PRESETS[tone];
+  // Alterne entre les variantes à chaque clic
+  var idx = b.dataset.idx ? (Number(b.dataset.idx) + 1) % list.length : 0;
+  b.dataset.idx = idx;
+  texteEl.value = list[idx];
+  currentAudioUrl = null;
+  setStatus('📝 Texte "' + tone + '" inséré', 'info');
+});
 
-  // ============================================================
-  // Journal visible dans la page
-  // ============================================================
-  function log(msg, kind){
-    var time = new Date().toLocaleTimeString('fr-FR');
-    var line = '[' + time + '] ' + msg;
-    console.log('[Prompt2Video] ' + msg);
-    logEl.style.display = 'block';
-    var span = document.createElement('div');
-    if (kind) span.className = kind;
-    span.textContent = line;
-    logEl.appendChild(span);
-    logEl.scrollTop = logEl.scrollHeight;
-  }
+// ============================================================
+// Sliders
+// ============================================================
+vitEl.addEventListener('input', function(){
+  vitVal.textContent = Number(vitEl.value).toFixed(1) + '×';
+  if (audioEl) audioEl.playbackRate = Number(vitEl.value);
+});
+tailleEl.addEventListener('input', function(){
+  tailleVal.textContent = tailleEl.value;
+  if (!isSpeaking && !isRecording) dessiner();
+});
+sensEl.addEventListener('input', function(){
+  sensVal.textContent = sensEl.value;
+});
 
-  // ============================================================
-  // Feedback sous le bouton Enregistrer
-  // ============================================================
-  function feedback(msg, kind){
-    feedbackEl.textContent = msg;
-    feedbackEl.className = 'show ' + (kind || 'ok');
-  }
+// ============================================================
+// Chargement image
+// ============================================================
+input.addEventListener('change', function(e){
+  var file = e.target.files[0];
+  if (!file) return;
 
-  // ============================================================
-  // Gestion du token
-  // ============================================================
-  function getToken(){
-    if (memoryToken) return memoryToken;
-    try { return localStorage.getItem('replicate_token') || ''; }
-    catch(e){ return ''; }
-  }
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      image = img;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.style.display = 'block';
+      posTip.style.display = 'block';
+      mouthX = img.width / 2;
+      mouthY = img.height * 0.72;
 
-  (function initToken(){
-    var t = '';
-    try { t = localStorage.getItem('replicate_token') || ''; }
-    catch(e){ log('localStorage inaccessible au démarrage', 'warn'); }
+      speakBtn.disabled = false;
+      recBtn.disabled = false;
+      setStatus('✅ Image chargée (' + img.width + '×' + img.height +
+                '). Clique sur la bouche pour ajuster.', 'success');
+      dessiner();
+    };
+    img.onerror = function(){ setStatus('❌ Erreur image', 'error'); };
+    img.src = ev.target.result;
+  };
+  reader.onerror = function(){ setStatus('❌ Erreur lecture', 'error'); };
+  reader.readAsDataURL(file);
+  setTimeout(function(){ input.value = ''; }, 400);
+});
 
-    if (t){
-      tokenInput.value = t;
-      memoryToken = t;
-      tokenBar.classList.add('ok');
-      feedback('✅ Clé déjà enregistrée (' + t.slice(0,7) + '…)', 'ok');
-    }
-  })();
+// ============================================================
+// Position bouche
+// ============================================================
+canvas.addEventListener('click', function(e){
+  if (!image) return;
+  var r = canvas.getBoundingClientRect();
+  mouthX = (e.clientX - r.left) * (canvas.width / r.width);
+  mouthY = (e.clientY - r.top) * (canvas.height / r.height);
+  setStatus('📍 Bouche à ' + Math.round(mouthX) + ', ' + Math.round(mouthY), 'info');
+  dessiner();
+});
 
-  saveBtn.addEventListener('click', function(){
-    log('Clic sur Enregistrer');
-    var t = tokenInput.value.trim();
+// ============================================================
+// Utilitaires
+// ============================================================
+function setStatus(msg, type){
+  statusEl.textContent = msg;
+  statusEl.className = 'status ' + (type || '');
+  console.log('[V&B] ' + msg);
+}
 
-    if (!t){
-      feedback('❌ Le champ est vide. Colle ta clé d\'abord.', 'err');
-      return;
-    }
-    if (!t.startsWith('r8_')){
-      feedback('❌ La clé doit commencer par "r8_".', 'err');
-      return;
-    }
-    if (t.length < 20){
-      feedback('❌ La clé semble incomplète (~40 caractères attendus).', 'err');
-      return;
-    }
+// ============================================================
+// Google TTS (voix capturable)
+// ============================================================
+function getTtsUrl(text, lang){
+  return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' +
+         lang + '&q=' + encodeURIComponent(text);
+}
 
-    memoryToken = t;
-    var persisted = false;
-    try {
-      localStorage.setItem('replicate_token', t);
-      persisted = true;
-    } catch(e){
-      log('localStorage.setItem a échoué : ' + e.message, 'warn');
-    }
+async function prepareAudio(){
+  var texte = texteEl.value.trim();
+  if (!texte) throw new Error('Texte vide');
 
-    tokenBar.classList.add('ok');
-    if (persisted){
-      feedback('✅ Clé enregistrée pour de bon ! (' + t.slice(0,7) + '…)', 'ok');
+  // Découpe en morceaux (max ~180 caractères par requête)
+  var morceaux = [];
+  var words = texte.split(/\s+/);
+  var cur = '';
+  for (var i = 0; i < words.length; i++){
+    if ((cur + ' ' + words[i]).trim().length > 180){
+      morceaux.push(cur.trim());
+      cur = words[i];
     } else {
-      feedback('⚠️ Clé en mémoire seulement (perdue au rechargement).', 'warn');
+      cur = (cur + ' ' + words[i]).trim();
     }
-    setStatus('✅ Clé prête. Tu peux générer une vidéo.', 'success');
-    log('Clé enregistrée (' + t.slice(0,7) + '…)', 'ok');
-  });
+  }
+  if (cur) morceaux.push(cur);
 
-  // ============================================================
-  // Statut
-  // ============================================================
-  function setStatus(msg, type){
-    statusEl.textContent = msg;
-    statusEl.className = 'status ' + (type || '');
+  var blobs = [];
+  for (var k = 0; k < morceaux.length; k++){
+    var url = getTtsUrl(morceaux[k], voixEl.value);
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    blobs.push(await res.blob());
   }
 
-  // ============================================================
-  // Image
-  // ============================================================
-  function showPreview(file){
-    var url = URL.createObjectURL(file);
-    dropzone.classList.add('has-image');
-    dropzone.innerHTML =
-      '<input type="file" id="fileInput" accept="image/*">' +
-      '<img src="' + url + '" alt="preview">';
-    fileInput = document.getElementById('fileInput');
-    bindFileInput();
-    selectedFile = file;
-    log('Image chargée : ' + file.name + ' (' + Math.round(file.size/1024) + ' Ko)', 'ok');
+  var blob = new Blob(blobs, { type: 'audio/mpeg' });
+  return URL.createObjectURL(blob);
+}
+
+// ============================================================
+// Dessin de la bouche
+// ============================================================
+function dessinerSur(g, W, H){
+  var taille = Number(tailleEl.value);
+  var sens = Number(sensEl.value);
+
+  var ouv = 0;
+  if (currentVolume > 0.02){
+    ouv = Math.min(1, currentVolume * sens);
+    ouv += Math.random() * 0.15 * ouv;
+    ouv = Math.min(1, ouv);
   }
 
-  function bindFileInput(){
-    fileInput.addEventListener('change', function(e){
-      var f = e.target.files[0];
-      if (f) showPreview(f);
-    });
-  }
+  var largeur = taille * (0.85 + 0.15 * ouv);
+  var hauteur = taille * 0.65 * ouv;
 
-  dropzone.addEventListener('click', function(){
-    if (!selectedFile) fileInput.click();
-  });
-  dropzone.addEventListener('dragover', function(e){
-    e.preventDefault(); dropzone.classList.add('dragover');
-  });
-  dropzone.addEventListener('dragleave', function(){
-    dropzone.classList.remove('dragover');
-  });
-  dropzone.addEventListener('drop', function(e){
-    e.preventDefault(); dropzone.classList.remove('dragover');
-    var f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith('image/')) showPreview(f);
-  });
-  bindFileInput();
+  if (hauteur > 1){
+    // Ombre
+    g.save();
+    g.beginPath();
+    g.ellipse(mouthX, mouthY + 3, largeur/2, hauteur/2 + 2, 0, 0, Math.PI*2);
+    g.fillStyle = 'rgba(0,0,0,0.35)';
+    g.filter = 'blur(4px)';
+    g.fill();
+    g.restore();
 
-  // ============================================================
-  // Affichage résultat
-  // ============================================================
-  function showPlaceholder(msg){
-    stage.innerHTML =
-      '<div class="ph"><div class="icon">⏳</div><p>' + msg + '</p></div>';
-  }
-  function showVideo(url){
-    stage.innerHTML =
-      '<video src="' + url + '" controls autoplay loop playsinline></video>';
-  }
-  function stopGenerating(){
-    isGenerating = false;
-    btn.disabled = false;
-    btn.classList.remove('loading');
-    btn.querySelector('.label').textContent = 'Générer la vidéo';
-  }
+    // Intérieur sombre
+    g.beginPath();
+    g.ellipse(mouthX, mouthY, largeur/2, hauteur/2, 0, 0, Math.PI*2);
+    g.fillStyle = '#2a0808';
+    g.fill();
 
-  // ============================================================
-  // Fichier → data URI
-  // ============================================================
-  function fileToDataURI(file){
-    return new Promise(function(resolve, reject){
-      var reader = new FileReader();
-      reader.onload = function(){ resolve(reader.result); };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
+    // Contour
+    g.strokeStyle = 'rgba(0,0,0,0.75)';
+    g.lineWidth = Math.max(1.5, taille * 0.05);
+    g.stroke();
 
-  // ============================================================
-  // Appel via proxy CORS
-  // ============================================================
-  function proxied(url){
-    return CORS_PROXY + encodeURIComponent(url);
-  }
+    // Langue
+    if (hauteur > taille * 0.3){
+      g.beginPath();
+      g.ellipse(mouthX, mouthY + hauteur*0.18,
+                largeur*0.35, hauteur*0.22, 0, 0, Math.PI*2);
+      g.fillStyle = '#8b3030';
+      g.fill();
+    }
 
-  async function callReplicate(imageDataUri){
-    var token = getToken();
-    if (!token) throw new Error('Clé Replicate manquante.');
-
-    var body = {
-      input: {
-        input_image: imageDataUri,
-        video_length: '14_frames_with_svd',
-        sizing_strategy: 'maintain_aspect_ratio',
-        frames_per_second: 6,
-        motion_bucket_id: 127,
-        cond_aug: 0.02,
-        seed: 0
+    // Dents
+    if (hauteur > taille * 0.25){
+      g.fillStyle = 'rgba(255,240,220,0.85)';
+      var dentsY = mouthY - hauteur/2 + 1;
+      var nb = 4;
+      var lw = largeur * 0.7 / nb;
+      var sx = mouthX - largeur * 0.35;
+      for (var d = 0; d < nb; d++){
+        g.fillRect(sx + d*lw + 1, dentsY, lw - 2, hauteur*0.12);
       }
+    }
+  }
+}
+
+function dessiner(){
+  if (!image) return;
+  var W = canvas.width;
+  var H = canvas.height;
+
+  ctx.drawImage(image, 0, 0, W, H);
+  dessinerSur(ctx, W, H);
+
+  // Marqueur quand inactif
+  if (!isSpeaking && !isRecording){
+    var taille = Number(tailleEl.value);
+    ctx.strokeStyle = 'rgba(255,100,100,0.55)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(mouthX, mouthY, taille * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// ============================================================
+// Écoute
+// ============================================================
+speakBtn.addEventListener('click', async function(){
+  if (isSpeaking){
+    if (audioEl) audioEl.pause();
+    stopLoop();
+    return;
+  }
+
+  try {
+    speakBtn.disabled = true;
+    speakBtn.textContent = '⏳ Préparation...';
+
+    // Reset cache si texte changé
+    if (!currentAudioUrl){
+      setStatus('⏳ Chargement de la voix...', 'info');
+      currentAudioUrl = await prepareAudio();
+    }
+
+    // AudioContext
+    if (!audioContext){
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') await audioContext.resume();
+
+    if (audioEl) audioEl.pause();
+    audioEl = new Audio(currentAudioUrl);
+    audioEl.playbackRate = Number(vitEl.value);
+
+    var source = audioContext.createMediaElementSource(audioEl);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.7;
+    source.connect(analyser);
+    source.connect(audioContext.destination);
+
+    audioEl.addEventListener('ended', function(){
+      stopLoop();
+      setStatus('✅ Lecture terminée', 'success');
+    });
+
+    isSpeaking = true;
+    speakBtn.textContent = '⏸ Stop';
+    speakBtn.disabled = false;
+    setStatus('🔊 Lecture...', 'info');
+
+    await audioEl.play();
+    startLoop();
+
+  } catch (err){
+    console.error(err);
+    setStatus('❌ ' + err.message, 'error');
+    stopLoop();
+  }
+});
+
+function startLoop(){
+  function loop(){
+    if (analyser){
+      var data = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(data);
+      var s = 0;
+      for (var i = 0; i < data.length; i++) s += data[i];
+      currentVolume = s / data.length / 255;
+    }
+    dessiner();
+    if (isSpeaking || isRecording) rafId = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function stopLoop(){
+  isSpeaking = false;
+  if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  speakBtn.textContent = '🔊 Écouter';
+  speakBtn.disabled = false;
+  currentVolume = 0;
+  dessiner();
+}
+
+// ============================================================
+// Enregistrement vidéo + audio
+// ============================================================
+recBtn.addEventListener('click', async function(){
+  if (isRecording || !image) return;
+  if (typeof MediaRecorder === 'undefined'){
+    setStatus('❌ MediaRecorder non supporté', 'error');
+    return;
+  }
+
+  try {
+    recBtn.disabled = true;
+    speakBtn.disabled = true;
+    recBtn.textContent = '⏳ Préparation...';
+    dl.style.display = 'none';
+
+    if (!currentAudioUrl){
+      setStatus('⏳ Génération de la voix...', 'info');
+      currentAudioUrl = await prepareAudio();
+    }
+
+    if (!audioContext){
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') await audioContext.resume();
+
+    // Audio
+    var audio = new Audio(currentAudioUrl);
+    audio.playbackRate = Number(vitEl.value);
+    var src = audioContext.createMediaElementSource(audio);
+    var an = audioContext.createAnalyser();
+    an.fftSize = 256;
+    an.smoothingTimeConstant = 0.7;
+    var dest = audioContext.createMediaStreamDestination();
+
+    src.connect(an);
+    src.connect(dest);
+    src.connect(audioContext.destination);
+
+    analyser = an;
+
+    // Canvas de rendu (mêmes dimensions que l'image)
+    var W = image.width;
+    var H = image.height;
+    var rc = document.createElement('canvas');
+    rc.width = W; rc.height = H;
+    var rctx = rc.getContext('2d');
+
+    // Stream vidéo
+    var stream = rc.captureStream(30);
+    // Ajoute la piste audio
+    var at = dest.stream.getAudioTracks()[0];
+    if (at) stream.addTrack(at);
+
+    // Codec
+    var mime = '';
+    var mimes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    for (var i = 0; i < mimes.length; i++){
+      if (MediaRecorder.isTypeSupported(mimes[i])){ mime = mimes[i]; break; }
+    }
+
+    var recorder = new MediaRecorder(stream, {
+      mimeType: mime,
+      videoBitsPerSecond: 5000000
+    });
+
+    var chunks = [];
+    recorder.ondataavailable = function(e){
+      if (e.data && e.data.size > 0) chunks.push(e.data);
     };
 
-    var createUrl = REPLICATE_BASE + '/models/' +
-                    MODEL_OWNER + '/' + MODEL_NAME + '/predictions';
+    var stopPromise = new Promise(function(r){ recorder.onstop = r; });
 
-    log('Envoi de la prédiction via proxy CORS…', 'info');
+    recorder.start();
+    isRecording = true;
+    recBtn.textContent = '⏺ Enregistrement...';
+    setStatus('🎬 Enregistrement en cours...', 'info');
 
-    var res;
-    try {
-      res = await fetch(proxied(createUrl), {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Token ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-    } catch(err){
-      log('Échec du fetch initial : ' + err.message, 'err');
-      throw new Error(
-        'Impossible de contacter Replicate. Vérifie ta connexion ' +
-        'ou essaie un autre proxy. (' + err.message + ')'
-      );
-    }
+    // Lance l'audio
+    await audio.play();
 
-    if (!res.ok){
-      var errText = '';
-      try { errText = await res.text(); } catch(e){}
-      log('Réponse HTTP ' + res.status, 'err');
-      var msg = 'Erreur ' + res.status + '. ';
-      if (res.status === 401) msg += 'Clé invalide ou expirée.';
-      else if (res.status === 402) msg += 'Crédit Replicate épuisé.';
-      else if (res.status === 429) msg += 'Trop de requêtes, réessaie dans 1 min.';
-      else msg += errText.slice(0, 300);
-      throw new Error(msg);
-    }
+    // Boucle de rendu sur le canvas de rendu
+    function renderLoop(){
+      var data = new Uint8Array(an.frequencyBinCount);
+      an.getByteFrequencyData(data);
+      var s = 0;
+      for (var i = 0; i < data.length; i++) s += data[i];
+      currentVolume = s / data.length / 255;
 
-    var pred = await res.json();
-    log('Prédiction créée : ' + pred.id + ' (status=' + pred.status + ')', 'info');
+      // Dessine sur le canvas de rendu
+      rctx.drawImage(image, 0, 0, W, H);
+      dessinerSur(rctx, W, H);
 
-    var attempts = 0;
-    while (pred.status !== 'succeeded' && pred.status !== 'failed'){
-      if (attempts++ > 90) throw new Error('Délai dépassé (4 minutes et demie).');
-      setStatus('🎬 Génération… (' + (attempts * 3) + 's)', 'info');
-      await new Promise(function(r){ setTimeout(r, 3000); });
+      // Aperçu dans le canvas visible (adapté en taille)
+      canvas.width = W; canvas.height = H;
+      ctx.drawImage(rc, 0, 0, W, H);
 
-      var pr;
-      try {
-        pr = await fetch(proxied(pred.urls.get), {
-          headers: { 'Authorization': 'Token ' + token }
-        });
-      } catch(err){
-        log('Polling échoué, on retente…', 'warn');
-        continue;
+      // Statut
+      var pct = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+      setStatus('🎬 Enregistrement — ' + Math.round(audio.currentTime) + 's / ' +
+                (audio.duration ? Math.round(audio.duration) + 's' : '?') +
+                ' (' + Math.round(pct) + '%)', 'info');
+
+      if (isRecording && !audio.paused){
+        rafId = requestAnimationFrame(renderLoop);
       }
-      if (!pr.ok){
-        log('Erreur de suivi : HTTP ' + pr.status, 'warn');
-        continue;
-      }
-      pred = await pr.json();
+    }
+    renderLoop();
+
+    // Fin
+    audio.addEventListener('ended', function(){
+      setTimeout(function(){
+        if (recorder.state === 'recording') recorder.stop();
+      }, 200);
+    });
+
+    await stopPromise;
+
+    stream.getTracks().forEach(function(tr){ tr.stop(); });
+    isRecording = false;
+
+    if (chunks.length === 0){
+      setStatus('❌ Aucune donnée vidéo', 'error');
+      resetRecBtn();
+      return;
     }
 
-    if (pred.status === 'failed'){
-      throw new Error(pred.error || 'Échec côté Replicate.');
-    }
+    var blob = new Blob(chunks, { type: mime.split(';')[0] });
+    var url = URL.createObjectURL(blob);
 
-    var output = pred.output;
-    var url = Array.isArray(output) ? output[0] : output;
-    log('Vidéo prête : ' + url, 'ok');
-    return url;
+    dl.href = url;
+    dl.style.display = 'block';
+    setStatus('✅ Vidéo prête ! ' + Math.round(blob.size/1024) + ' Ko', 'success');
+    resetRecBtn();
+
+  } catch (err){
+    console.error(err);
+    setStatus('❌ ' + err.message, 'error');
+    isRecording = false;
+    resetRecBtn();
   }
+});
 
-  // ============================================================
-  // Clic Générer
-  // ============================================================
-  btn.addEventListener('click', async function(){
-    if (isGenerating) return;
+function resetRecBtn(){
+  recBtn.disabled = false;
+  speakBtn.disabled = false;
+  recBtn.textContent = '⏺ Enregistrer vidéo';
+}
 
-    if (!getToken()){
-      setStatus('⚠️ Enregistre ta clé Replicate d\'abord (en haut).', 'error');
-      tokenInput.focus();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (!selectedFile){
-      setStatus('⚠️ Choisis une image d\'abord.', 'error');
-      return;
-    }
-    var prompt = promptEl.value.trim();
-    if (!prompt){
-      setStatus('⚠️ Décris le mouvement à animer.', 'error');
-      promptEl.focus();
-      return;
-    }
+// Reset du cache quand on change le texte ou la langue
+texteEl.addEventListener('input', function(){ currentAudioUrl = null; });
+voixEl.addEventListener('change', function(){ currentAudioUrl = null; });
 
-    isGenerating = true;
-    btn.disabled = true;
-    btn.classList.add('loading');
-    btn.querySelector('.label').textContent = 'Génération…';
-    setStatus('⏳ Préparation de l\'image…', 'info');
-    showPlaceholder('L\'IA anime ton image…');
-    log('Début de la génération. Prompt : "' + prompt + '"', 'info');
-
-    try {
-      var dataUri = await fileToDataURI(selectedFile);
-      log('Image encodée en base64 (' + Math.round(dataUri.length/1024) + ' Ko)', 'ok');
-
-      setStatus('🚀 Envoi à Replicate (via proxy)…', 'info');
-      var videoUrl = await callReplicate(dataUri);
-
-      showVideo(videoUrl);
-      setStatus('✅ Vidéo générée ! Le prompt utilisé : "' + prompt + '"', 'success');
-    } catch (err){
-      console.error('[Prompt2Video] Erreur :', err);
-      setStatus('❌ ' + err.message, 'error');
-      showPlaceholder('La génération a échoué.');
-      log('Erreur : ' + err.message, 'err');
-    } finally {
-      stopGenerating();
-    }
-  });
-
-  // ============================================================
-  // Raccourci Ctrl/Cmd + Entrée
-  // ============================================================
-  promptEl.addEventListener('keydown', function(e){
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
-      e.preventDefault();
-      btn.click();
-    }
-  });
-
-  log('Prêt. Colle ta clé Replicate puis clique Enregistrer.', 'ok');
+console.log('=== Prêt ===');
 })();
 </script>
 </body>
-</html>
+  </html>
