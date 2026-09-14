@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Studio Vocal Autonome</title>
+<title>Studio Vocal Autonome v2</title>
 <style>
   :root{
     --bg:#0b1220; --card:#141c2e; --card2:#1e293b; --text:#e2e8f0;
-    --muted:#94a3b8; --primary:#6366f1; --accent:#a855f7;
-    --danger:#ef4444; --ok:#22c55e; --warn:#f59e0b; --border:#334155;
+    --muted:#94a3b8; --primary:#6366f1; --danger:#ef4444;
+    --ok:#22c55e; --warn:#f59e0b; --border:#334155;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
@@ -17,26 +17,30 @@
     color:var(--text); min-height:100vh; padding:16px;
     display:flex; justify-content:center; align-items:flex-start;
   }
-  .app{width:100%;max-width:900px;background:rgba(20,28,46,.95);
-    border:1px solid var(--border);border-radius:22px;padding:26px;
+  .app{width:100%;max-width:920px;background:rgba(20,28,46,.95);
+    border:1px solid var(--border);border-radius:22px;padding:24px;
     box-shadow:0 25px 60px rgba(0,0,0,.6)}
   h1{font-size:clamp(1.4rem,3vw,1.9rem);text-align:center;margin-bottom:4px;
     background:linear-gradient(90deg,#818cf8,#c084fc,#f472b6);
     -webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:18px}
-  textarea{width:100%;min-height:150px;resize:vertical;background:#0b1220;
+  .sub{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:14px}
+  .diag{background:#0b1220;border:1px solid var(--border);border-radius:10px;
+    padding:8px 12px;font-size:.78rem;color:var(--muted);margin-bottom:14px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  .diag b{color:var(--text)}
+  textarea{width:100%;min-height:140px;resize:vertical;background:#0b1220;
     color:var(--text);border:1px solid var(--border);border-radius:14px;
     padding:14px;font-size:1rem;line-height:1.6;outline:none;transition:.2s}
   textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
   .meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
-    margin:10px 4px 16px;font-size:.85rem;color:var(--muted)}
+    margin:8px 4px 14px;font-size:.85rem;color:var(--muted)}
   #status{font-weight:700;color:var(--ok)}
 
-  .section-title{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;
+  .section-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;
     color:var(--muted);margin:14px 4px 8px}
 
   .profiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
-    gap:8px;margin-bottom:14px}
+    gap:8px;margin-bottom:12px}
   .profile{
     background:var(--card2);border:1px solid var(--border);border-radius:12px;
     padding:10px 6px;cursor:pointer;text-align:center;font-size:.82rem;
@@ -47,7 +51,7 @@
   .profile .emoji{display:block;font-size:1.3rem;margin-bottom:2px}
 
   .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:14px;margin-bottom:18px}
+    gap:14px;margin-bottom:16px}
   .control{background:var(--card2);border:1px solid var(--border);
     border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
   .control label{font-size:.82rem;color:var(--muted);display:flex;
@@ -61,22 +65,36 @@
   .buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
   button{border:1px solid var(--border);border-radius:12px;padding:12px 18px;
     font-size:.92rem;font-weight:700;cursor:pointer;color:#fff;
-    background:var(--card2);transition:.15s;min-width:120px}
+    background:var(--card2);transition:.15s;min-width:120px;
+    -webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
   button:hover{filter:brightness(1.15);transform:translateY(-1px)}
+  button:active{transform:scale(.97)}
   button:disabled{opacity:.4;cursor:not-allowed;transform:none}
   button.primary{background:linear-gradient(135deg,var(--primary),#8b5cf6);border:none}
   button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);border:none}
+  button.flash{animation:flash .3s}
+  @keyframes flash{
+    0%{filter:brightness(2)}
+    100%{filter:brightness(1)}
+  }
+  .small{font-size:.8rem;padding:8px 12px;min-width:auto}
 
-  footer{margin-top:20px;text-align:center;font-size:.78rem;color:var(--muted);line-height:1.5}
-  @media(max-width:520px){.app{padding:18px}button{flex:1 1 100%}}
+  footer{margin-top:18px;text-align:center;font-size:.75rem;color:var(--muted);line-height:1.5}
+  @media(max-width:520px){.app{padding:16px}button{flex:1 1 100%}}
 </style>
 </head>
 <body>
 <div class="app">
   <h1>🎙️ Studio Vocal Autonome</h1>
-  <p class="sub">Fonctionne 100% hors ligne — aucune dépendance externe.</p>
+  <p class="sub">100% hors ligne • boutons fiabilisés • anti-timeout Chrome</p>
 
-  <textarea id="text" placeholder="Écris ton texte ici...">Bonjour, je suis une voix entièrement générée par ton appareil. Aucune connexion internet n'est nécessaire.</textarea>
+  <div class="diag">
+    <span>Voix détectées : <b id="diagVoices">0</b></span>
+    <span>Moteur : <b id="diagEngine">…</b></span>
+    <span>État : <b id="diagState">initialisation</b></span>
+  </div>
+
+  <textarea id="text" placeholder="Écris ton texte ici...">Bonjour, ceci est un test de la synthèse vocale. Les boutons sont maintenant fiabilisés.</textarea>
 
   <div class="meta">
     <span id="charCount">0 caractère</span>
@@ -89,7 +107,10 @@
   <div class="section-title">Voix système</div>
   <div class="controls">
     <div class="control" style="grid-column:1/-1">
-      <label for="voiceSelect">Voix installée sur l'appareil</label>
+      <label for="voiceSelect">
+        <span>Voix installée sur l'appareil</span>
+        <button id="reloadVoicesBtn" class="small" type="button" style="min-width:auto">🔄 Recharger</button>
+      </label>
       <select id="voiceSelect"></select>
     </div>
 
@@ -110,10 +131,11 @@
   </div>
 
   <div class="buttons">
-    <button id="speakBtn" class="primary">▶ Lire</button>
-    <button id="pauseBtn">⏸ Pause</button>
-    <button id="resumeBtn">⏯ Reprendre</button>
-    <button id="stopBtn" class="danger">⏹ Stop</button>
+    <button id="speakBtn"  class="primary" type="button">▶ Lire</button>
+    <button id="pauseBtn"  type="button">⏸ Pause</button>
+    <button id="resumeBtn" type="button">⏯ Reprendre</button>
+    <button id="stopBtn"   class="danger" type="button">⏹ Stop</button>
+    <button id="testBtn"   type="button">🔊 Test rapide</button>
   </div>
 
   <footer>
@@ -125,27 +147,23 @@
 (function(){
   "use strict";
 
-  /* ============================================================
-     PROFILS VOCAUX — combinaisons pitch / vitesse / volume
-     ============================================================ */
+  /* ---------- Profils vocaux ---------- */
   const PROFILES = [
-    { id:"normal",    name:"Normal",     emoji:"🙂", pitch:1.0, rate:1.0,  volume:1.0  },
-    { id:"narrateur", name:"Narrateur",  emoji:"📖", pitch:0.9, rate:0.9,  volume:1.0  },
-    { id:"presentateur", name:"Présentateur", emoji:"📢", pitch:1.0, rate:1.15, volume:1.0 },
-    { id:"enfant",    name:"Enfant",     emoji:"🧒", pitch:1.8, rate:1.15, volume:1.0  },
-    { id:"geant",     name:"Géant",      emoji:"🗿", pitch:0.3, rate:0.7,  volume:1.0  },
-    { id:"robot",     name:"Robot",      emoji:"🤖", pitch:0.5, rate:0.8,  volume:1.0  },
-    { id:"alien",     name:"Alien",      emoji:"👽", pitch:1.9, rate:0.7,  volume:1.0  },
-    { id:"fantome",   name:"Fantôme",    emoji:"👻", pitch:0.7, rate:0.6,  volume:0.7  },
-    { id:"mysterieux",name:"Mystérieux", emoji:"🕵️", pitch:0.6, rate:0.85, volume:0.9  },
-    { id:"rapide",    name:"Rapide",     emoji:"⚡", pitch:1.1, rate:1.8,  volume:1.0  },
-    { id:"lent",      name:"Très lent",  emoji:"🐢", pitch:0.95,rate:0.5,  volume:1.0  },
-    { id:"puissant",  name:"Puissant",   emoji:"💥", pitch:0.7, rate:1.2,  volume:1.0  }
+    { id:"normal",      name:"Normal",       emoji:"🙂", pitch:1.0, rate:1.0,  volume:1.0 },
+    { id:"narrateur",   name:"Narrateur",    emoji:"📖", pitch:0.9, rate:0.9,  volume:1.0 },
+    { id:"presentateur",name:"Présentateur", emoji:"📢", pitch:1.0, rate:1.15, volume:1.0 },
+    { id:"enfant",      name:"Enfant",       emoji:"🧒", pitch:1.8, rate:1.15, volume:1.0 },
+    { id:"geant",       name:"Géant",        emoji:"🗿", pitch:0.3, rate:0.7,  volume:1.0 },
+    { id:"robot",       name:"Robot",        emoji:"🤖", pitch:0.5, rate:0.8,  volume:1.0 },
+    { id:"alien",       name:"Alien",        emoji:"👽", pitch:1.9, rate:0.7,  volume:1.0 },
+    { id:"fantome",     name:"Fantôme",      emoji:"👻", pitch:0.7, rate:0.6,  volume:0.7 },
+    { id:"mysterieux",  name:"Mystérieux",   emoji:"🕵️", pitch:0.6, rate:0.85, volume:0.9 },
+    { id:"rapide",      name:"Rapide",       emoji:"⚡", pitch:1.1, rate:1.8,  volume:1.0 },
+    { id:"lent",        name:"Très lent",    emoji:"🐢", pitch:0.95,rate:0.5,  volume:1.0 },
+    { id:"puissant",    name:"Puissant",     emoji:"💥", pitch:0.7, rate:1.2,  volume:1.0 }
   ];
 
-  /* ============================================================
-     RÉFÉRENCES DOM
-     ============================================================ */
+  /* ---------- DOM ---------- */
   const synth       = window.speechSynthesis;
   const textEl      = document.getElementById("text");
   const voiceSelect = document.getElementById("voiceSelect");
@@ -159,47 +177,67 @@
   const pauseBtn    = document.getElementById("pauseBtn");
   const resumeBtn   = document.getElementById("resumeBtn");
   const stopBtn     = document.getElementById("stopBtn");
+  const testBtn     = document.getElementById("testBtn");
+  const reloadBtn   = document.getElementById("reloadVoicesBtn");
   const statusEl    = document.getElementById("status");
   const charCountEl = document.getElementById("charCount");
   const profilesEl  = document.getElementById("profiles");
+  const diagVoices  = document.getElementById("diagVoices");
+  const diagEngine  = document.getElementById("diagEngine");
+  const diagState   = document.getElementById("diagState");
 
   let voices = [];
   let currentProfileId = "normal";
+  let keepAliveTimer = null;
+  let lastSpokenText = "";
 
-  /* ============================================================
-     VÉRIFICATION SUPPORT
-     ============================================================ */
+  /* ---------- Support ---------- */
   if (!synth || typeof SpeechSynthesisUtterance === "undefined") {
-    statusEl.textContent = "Synthèse vocale non supportée par ce navigateur";
+    statusEl.textContent = "Synthèse vocale non supportée";
     statusEl.style.color = "#ef4444";
-    [speakBtn,pauseBtn,resumeBtn,stopBtn].forEach(b=>{
-      b.disabled = true;
-    });
+    [speakBtn, pauseBtn, resumeBtn, stopBtn, testBtn].forEach(b => b.disabled = true);
+    diagEngine.textContent = "absent";
+    diagState.textContent = "non supporté";
     return;
   }
+  diagEngine.textContent = "prêt";
 
-  /* ============================================================
-     UTILITAIRES
-     ============================================================ */
+  /* ---------- Utilitaires ---------- */
   function setStatus(msg, color){
     statusEl.textContent = msg;
     statusEl.style.color = color || "#22c55e";
   }
-
+  function setDiagState(msg){ diagState.textContent = msg; }
+  function flash(btn){
+    btn.classList.remove("flash");
+    void btn.offsetWidth; // force reflow
+    btn.classList.add("flash");
+  }
   function updateCharCount(){
     const n = textEl.value.length;
     charCountEl.textContent = n + (n > 1 ? " caractères" : " caractère");
   }
-
   function getSelectedVoice(){
     if (!voiceSelect.value) return null;
     const [name, lang] = voiceSelect.value.split("||");
     return voices.find(v => v.name === name && v.lang === lang) || null;
   }
 
-  /* ============================================================
-     PROFILS
-     ============================================================ */
+  /* ---------- Anti-timeout Chrome (bug ~15s) ---------- */
+  function startKeepAlive(){
+    stopKeepAlive();
+    keepAliveTimer = setInterval(() => {
+      if (synth.speaking && !synth.paused){
+        synth.pause();
+        synth.resume();
+      }
+    }, 10000);
+  }
+  function stopKeepAlive(){
+    if (keepAliveTimer){ clearInterval(keepAliveTimer); keepAliveTimer = null; }
+  }
+
+  /* ---------- Profils ---------- */
   function renderProfiles(){
     profilesEl.innerHTML = "";
     PROFILES.forEach(p => {
@@ -207,55 +245,58 @@
       div.className = "profile" + (p.id === currentProfileId ? " active" : "");
       div.dataset.id = p.id;
       div.innerHTML = '<span class="emoji">'+p.emoji+'</span>'+p.name;
-      div.addEventListener("click", ()=> applyProfile(p.id));
+      div.addEventListener("click", () => applyProfile(p.id));
       profilesEl.appendChild(div);
     });
   }
-
   function applyProfile(id){
     const p = PROFILES.find(x => x.id === id);
     if (!p) return;
     currentProfileId = id;
-
     rateEl.value   = p.rate;
     pitchEl.value  = p.pitch;
     volumeEl.value = p.volume;
-
     rateValue.textContent   = p.rate.toFixed(1);
     pitchValue.textContent  = p.pitch.toFixed(1);
     volumeValue.textContent = p.volume.toFixed(2);
-
-    document.querySelectorAll(".profile").forEach(el=>{
+    document.querySelectorAll(".profile").forEach(el => {
       el.classList.toggle("active", el.dataset.id === id);
     });
   }
+  function clearProfileSelection(){
+    document.querySelectorAll(".profile").forEach(el => el.classList.remove("active"));
+    currentProfileId = "";
+  }
 
-  /* ============================================================
-     VOIX SYSTÈME
-     ============================================================ */
+  /* ---------- Voix ---------- */
   function populateVoices(){
-    voices = synth.getVoices();
+    let list = [];
+    try { list = synth.getVoices() || []; } catch(e){ list = []; }
+    voices = list;
+    diagVoices.textContent = voices.length;
+
     const current = voiceSelect.value;
     voiceSelect.innerHTML = "";
 
-    if (!voices.length) {
+    if (!voices.length){
       const o = document.createElement("option");
-      o.textContent = "Aucune voix détectée";
-      o.disabled = true;
+      o.textContent = "Aucune voix détectée — clique sur Recharger";
+      o.value = "";
       voiceSelect.appendChild(o);
+      setDiagState("voix non chargées");
       return;
     }
 
     const groups = {};
-    voices.forEach(v=>{
+    voices.forEach(v => {
       const lang = v.lang || "??";
       (groups[lang] = groups[lang] || []).push(v);
     });
 
-    Object.keys(groups).sort().forEach(lang=>{
+    Object.keys(groups).sort().forEach(lang => {
       const optgroup = document.createElement("optgroup");
       optgroup.label = lang;
-      groups[lang].forEach(v=>{
+      groups[lang].forEach(v => {
         const o = document.createElement("option");
         o.value = v.name + "||" + v.lang;
         o.textContent = v.name + (v.default ? " — par défaut" : "") + " (" + v.lang + ")";
@@ -264,120 +305,236 @@
       voiceSelect.appendChild(optgroup);
     });
 
-    if (current &&
-        Array.from(voiceSelect.options).some(o=>o.value===current)) {
+    // Restaurer ou sélectionner la voix française par défaut si possible
+    if (current && Array.from(voiceSelect.options).some(o => o.value === current)) {
       voiceSelect.value = current;
     } else {
-      const def = voices.find(v=>v.default) || voices[0];
-      voiceSelect.value = def.name + "||" + def.lang;
+      const fr = voices.find(v => /^fr/i.test(v.lang));
+      const def = fr || voices.find(v => v.default) || voices[0];
+      if (def) voiceSelect.value = def.name + "||" + def.lang;
     }
+    setDiagState("prêt");
   }
 
-  /* ============================================================
-     CONTRÔLES DE LECTURE
-     ============================================================ */
-  function speak(){
-    const text = textEl.value.trim();
+  /* ---------- Chargement différé des voix ---------- */
+  if (typeof synth.onvoiceschanged !== "undefined"){
+    synth.onvoiceschanged = populateVoices;
+  }
+  // Certains navigateurs exigent un premier appel à getVoices()
+  try { synth.getVoices(); } catch(e){}
+
+  // Astuce : sur Chrome Android, parler une fois vide force le chargement
+  function forceLoadVoices(){
+    try {
+      const u = new SpeechSynthesisUtterance("");
+      u.volume = 0;
+      synth.speak(u);
+      synth.cancel();
+    } catch(e){}
+  }
+
+  // Recharge forcée au premier clic utilisateur
+  function userGestureReload(){
+    populateVoices();
+    if (!voices.length){
+      forceLoadVoices();
+      setTimeout(populateVoices, 300);
+    }
+    document.removeEventListener("click", userGestureReload, true);
+    document.removeEventListener("touchstart", userGestureReload, true);
+  }
+  document.addEventListener("click", userGestureReload, true);
+  document.addEventListener("touchstart", userGestureReload, true);
+
+  // Tentatives successives au démarrage
+  [0, 200, 600, 1200, 2500].forEach(t => setTimeout(populateVoices, t));
+
+  /* ---------- Lecture ---------- */
+  function speak(textOverride){
+    const text = (textOverride !== undefined ? textOverride : textEl.value).trim();
     if (!text){
       setStatus("Écris d'abord un texte.", "#f59e0b");
       return;
     }
 
-    // Coupe toute lecture en cours
-    if (synth.speaking || synth.pending) synth.cancel();
+    // Recharge les voix si vides
+    if (!voices.length) populateVoices();
 
+    // Si une lecture est en cours, on l'annule proprement
+    const wasSpeaking = synth.speaking || synth.pending;
+    if (wasSpeaking){
+      try { synth.cancel(); } catch(e){}
+    }
+
+    // Débloque un éventuel état coincé de Chrome
+    try { synth.resume(); } catch(e){}
+
+    // Petit délai UNIQUEMENT si on vient d'annuler, sinon immédiat
+    const delay = wasSpeaking ? 120 : 0;
+
+    setTimeout(() => {
+      try {
+        launchUtterance(text, getSelectedVoice());
+      } catch(err){
+        setStatus("Erreur : " + err.message, "#ef4444");
+        setDiagState("erreur");
+      }
+    }, delay);
+  }
+
+  function launchUtterance(text, voice){
     const u = new SpeechSynthesisUtterance(text);
-    const v = getSelectedVoice();
-    if (v) u.voice = v;
+
+    if (voice) {
+      u.voice = voice;
+      u.lang  = voice.lang;   // cohérent avec la voix
+    } else {
+      u.lang  = "fr-FR";      // repli
+    }
 
     u.rate   = parseFloat(rateEl.value);
     u.pitch  = parseFloat(pitchEl.value);
     u.volume = parseFloat(volumeEl.value);
-    u.lang   = v ? v.lang : "fr-FR";
 
-    u.onstart  = ()=> setStatus("Lecture en cours...", "#22c55e");
-    u.onend    = ()=> setStatus("Terminé", "#22c55e");
-    u.onpause  = ()=> setStatus("En pause", "#f59e0b");
-    u.onresume = ()=> setStatus("Reprise...", "#22c55e");
-    u.onerror  = e => setStatus("Erreur : " + (e.error||"inconnue"), "#ef4444");
+    lastSpokenText = text;
+
+    u.onstart = () => {
+      setStatus("Lecture en cours…");
+      setDiagState("parle");
+      startKeepAlive();
+      flash(speakBtn);
+    };
+    u.onend = () => {
+      setStatus("Terminé");
+      setDiagState("prêt");
+      stopKeepAlive();
+    };
+    u.onpause = () => {
+      setStatus("En pause", "#f59e0b");
+      setDiagState("pause");
+    };
+    u.onresume = () => {
+      setStatus("Reprise…");
+      setDiagState("parle");
+    };
+    u.onerror = (e) => {
+      stopKeepAlive();
+      const err = (e && e.error) ? e.error : "inconnue";
+
+      // Ignorer les annulations volontaires
+      if (err === "interrupted" || err === "canceled") return;
+
+      console.warn("[TTS] erreur :", err, "voix =", voice ? voice.name : "aucune");
+
+      // Repli automatique : réessayer SANS forcer la voix
+      if (voice && (err === "synthesis-failed" || err === "audio-busy")) {
+        setStatus("Repli (sans voix spécifique)…", "#f59e0b");
+        setDiagState("repli");
+        try {
+          const u2 = new SpeechSynthesisUtterance(lastSpokenText);
+          u2.lang   = "fr-FR";
+          u2.rate   = u.rate;
+          u2.pitch  = u.pitch;
+          u2.volume = u.volume;
+          u2.onstart  = () => { setStatus("Lecture (voix par défaut)…"); setDiagState("parle"); startKeepAlive(); };
+          u2.onend    = () => { setStatus("Terminé"); setDiagState("prêt"); stopKeepAlive(); };
+          u2.onerror  = (e2) => {
+            stopKeepAlive();
+            setStatus("Erreur : " + (e2.error||"inconnue"), "#ef4444");
+            setDiagState("erreur");
+          };
+          synth.speak(u2);
+          return;
+        } catch(_){}
+      }
+
+      setStatus("Erreur : " + err, "#ef4444");
+      setDiagState("erreur");
+    };
 
     synth.speak(u);
   }
 
+  /* ---------- Contrôles ---------- */
   function pause(){
+    flash(pauseBtn);
     if (synth.speaking && !synth.paused){
-      synth.pause();
-      setStatus("En pause", "#f59e0b");
+      try { synth.pause(); setStatus("En pause", "#f59e0b"); setDiagState("pause"); } catch(e){}
+    } else {
+      setStatus("Rien à mettre en pause.", "#f59e0b");
     }
   }
-
   function resume(){
+    flash(resumeBtn);
     if (synth.paused){
-      synth.resume();
-      setStatus("Reprise...", "#22c55e");
+      try { synth.resume(); setStatus("Reprise…"); setDiagState("parle"); } catch(e){}
+    } else {
+      setStatus("Rien à reprendre.", "#f59e0b");
     }
   }
-
   function stop(){
+    flash(stopBtn);
+    stopKeepAlive();
     if (synth.speaking || synth.pending || synth.paused){
-      synth.cancel();
+      try { synth.cancel(); } catch(e){}
       setStatus("Arrêté", "#f59e0b");
+      setDiagState("prêt");
+    } else {
+      setStatus("Rien en cours.", "#f59e0b");
     }
   }
+  function testVoice(){
+    flash(testBtn);
+    speak("Test de la synthèse vocale. Un, deux, trois.");
+  }
 
-  /* ============================================================
-     ÉVÉNEMENTS
-     ============================================================ */
-  rateEl.addEventListener("input", ()=>{
+  /* ---------- Écouteurs ---------- */
+  rateEl.addEventListener("input", () => {
     rateValue.textContent = parseFloat(rateEl.value).toFixed(1);
-    // Si l'utilisateur change manuellement, on retire l'état "profil actif"
-    document.querySelectorAll(".profile").forEach(el=>el.classList.remove("active"));
-    currentProfileId = "";
+    clearProfileSelection();
   });
-  pitchEl.addEventListener("input", ()=>{
+  pitchEl.addEventListener("input", () => {
     pitchValue.textContent = parseFloat(pitchEl.value).toFixed(1);
-    document.querySelectorAll(".profile").forEach(el=>el.classList.remove("active"));
-    currentProfileId = "";
+    clearProfileSelection();
   });
-  volumeEl.addEventListener("input", ()=>{
+  volumeEl.addEventListener("input", () => {
     volumeValue.textContent = parseFloat(volumeEl.value).toFixed(2);
-    document.querySelectorAll(".profile").forEach(el=>el.classList.remove("active"));
-    currentProfileId = "";
+    clearProfileSelection();
   });
 
   textEl.addEventListener("input", updateCharCount);
-  textEl.addEventListener("keydown", e=>{
-    if ((e.ctrlKey||e.metaKey) && e.key === "Enter"){
+  textEl.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter"){
       e.preventDefault();
       speak();
     }
   });
 
-  speakBtn.addEventListener("click", speak);
-  pauseBtn.addEventListener("click", pause);
+  speakBtn.addEventListener("click",  () => { flash(speakBtn); speak(); });
+  pauseBtn.addEventListener("click",  pause);
   resumeBtn.addEventListener("click", resume);
-  stopBtn.addEventListener("click", stop);
+  stopBtn.addEventListener("click",   stop);
+  testBtn.addEventListener("click",   testVoice);
+  reloadBtn.addEventListener("click", () => {
+    flash(reloadBtn);
+    forceLoadVoices();
+    setTimeout(populateVoices, 200);
+    setStatus("Voix rechargées.", "#22c55e");
+  });
 
-  // Arrêt automatique si on ferme la page
-  window.addEventListener("beforeunload", ()=> synth.cancel());
+  // Nettoyage si on quitte la page
+  window.addEventListener("beforeunload", () => {
+    stopKeepAlive();
+    try { synth.cancel(); } catch(e){}
+  });
 
-  /* ============================================================
-     INITIALISATION
-     ============================================================ */
+  /* ---------- Initialisation ---------- */
   renderProfiles();
   applyProfile("normal");
   populateVoices();
-
-  if (typeof synth.onvoiceschanged !== "undefined"){
-    synth.onvoiceschanged = populateVoices;
-  }
-  // Certains navigateurs chargent les voix en différé
-  setTimeout(populateVoices, 200);
-  setTimeout(populateVoices, 800);
-  setTimeout(populateVoices, 1500);
-
   updateCharCount();
   setStatus("Prêt");
+  diagEngine.textContent = "prêt";
 })();
 </script>
 </body>
