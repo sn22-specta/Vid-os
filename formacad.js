@@ -15,7 +15,34 @@ function extrudeSketch(){if(!selected||!selected.userData.isSketch){alert('Séle
 function project(){return{name:$('name').value,format:'FormaCAD Studio',version:2,units:'mm',objects:group.children.map(o=>({type:o.userData.type,name:o.name,color:'#'+o.material.color.getHexString(),x:o.position.x,y:o.position.y,z:o.position.z,rx:o.rotation?.x||0,ry:o.rotation?.y||0,rz:o.rotation?.z||0,sx:o.scale?.x||1,sy:o.scale?.y||1,sz:o.scale?.z||1,...(o.userData.params||{}),feature:o.userData.feature||null}))}}
 function choose(o){selected=o;gizmo.detach();if(o&&mode!=='select'){gizmo.setMode(mode);gizmo.attach(o)}drawTree();drawProps()}
 function drawTree(){const el=$('tree');el.replaceChildren();group.children.forEach(o=>{const d=document.createElement('div');d.textContent=o.userData.type+' — '+o.name;d.style.cssText='padding:8px;cursor:pointer;border-radius:6px;'+(o===selected?'background:#30425e':'');d.onclick=()=>choose(o);el.append(d)})}
-function drawProps(){const el=$('props');if(!selected){el.textContent='Sélectionne un objet.';return}el.innerHTML='<p>Nom</p><input id="objname"><p>Position X / Y / Z</p><div><input data-p="x" type="number" style="width:30%"><input data-p="y" type="number" style="width:30%"><input data-p="z" type="number" style="width:30%"></div><p>Échelle X / Y / Z</p><div><input data-p="sx" type="number" style="width:30%"><input data-p="sy" type="number" style="width:30%"><input data-p="sz" type="number" style="width:30%"></div><p>Couleur</p><input id="color" type="color">';$('objname').value=selected.name;for(const i of el.querySelectorAll('[data-p]')){i.value=selected[i.dataset.p[0]==='s'?'scale':'position'][i.dataset.p[1]||i.dataset.p[0]]??1;i.onchange=()=>{const k=i.dataset.p,v=Number(i.value);if(k[0]==='s')selected.scale[k[1]]=Math.max(.01,v);else selected.position[k]=v}}$('objname').onchange=e=>{selected.name=e.target.value;drawTree()};$('color').value='#'+selected.material.color.getHexString();$('color').oninput=e=>selected.material.color.set(e.target.value)}
+function drawProps(){
+ const el=$('props');
+ if(!selected){el.textContent='Sélectionne un objet.';return}
+ const sketch=!!selected.userData.isSketch, params=selected.userData.params||{};
+ el.innerHTML='<p>Nom</p><input id="objname"><p>Position X / Y / Z</p><div class="triple"><input data-p="x" type="number" aria-label="Position X"><input data-p="y" type="number" aria-label="Position Y"><input data-p="z" type="number" aria-label="Position Z"></div><p>Échelle X / Y / Z</p><div class="triple"><input data-p="sx" type="number" step="0.1" aria-label="Échelle X"><input data-p="sy" type="number" step="0.1" aria-label="Échelle Y"><input data-p="sz" type="number" step="0.1" aria-label="Échelle Z"></div>'+(sketch?'<p>Dimensions de l’esquisse (mm)</p>'+(selected.userData.type==='Esquisse rectangle'?'<div class="triple"><input data-dim="width" type="number" min="1" aria-label="Largeur"><input data-dim="height" type="number" min="1" aria-label="Hauteur"></div>':'<input data-dim="radius" type="number" min="1" aria-label="Rayon">'):'<p>Dimensions (mm)</p>'+(selected.userData.type==='Sphère'?'<input data-dim="radius" type="number" min="1" aria-label="Rayon">':(selected.userData.type==='Cylindre'||selected.userData.feature?.profile==='Esquisse cercle')?'<div class="triple"><input data-dim="radius" type="number" min="1" aria-label="Rayon"><input data-dim="depth" type="number" min="1" aria-label="Profondeur"></div>':'<div class="triple"><input data-dim="width" type="number" min="1" aria-label="Largeur"><input data-dim="depth" type="number" min="1" aria-label="Profondeur"><input data-dim="height" type="number" min="1" aria-label="Hauteur"></div>'))+'<p>Couleur</p><input id="color" type="color">';
+ $('objname').value=selected.name;
+ for(const i of el.querySelectorAll('[data-p]')){
+  const k=i.dataset.p,axis=k[k.length-1];i.value=k[0]==='s'?selected.scale[axis]:selected.position[k];
+  i.onchange=()=>{const v=Number(i.value);if(!Number.isFinite(v))return;if(k[0]==='s')selected.scale[axis]=Math.max(.01,v);else selected.position[k]=v}
+ }
+ for(const i of el.querySelectorAll('[data-dim]')){
+  const k=i.dataset.dim;i.value=params[k]||25;
+  i.onchange=()=>{const v=Number(i.value);if(!Number.isFinite(v)||v<=0){i.value=params[k]||25;return}
+   params[k]=v;selected.userData.params=params;
+   if(selected.userData.isSketch){const pos={x:selected.position.x,y:selected.position.y,z:selected.position.z};const next=createSketch(selected.userData.type,{...params,name:selected.name,...pos});group.remove(selected);choose(next);return}
+   if(k==='width'||k==='height'||k==='depth'||k==='radius'){
+    let geo;
+    if(selected.userData.type==='Sphère')geo=new T.SphereGeometry(params.radius||20,32,24);
+    else if(selected.userData.type==='Cylindre'||selected.userData.feature?.profile==='Esquisse cercle')geo=new T.CylinderGeometry(params.radius||15,params.radius||15,params.depth||35,32);
+    else geo=new T.BoxGeometry(params.width||40,params.depth||30,params.height||30);
+    selected.geometry.dispose();selected.geometry=geo;
+   }
+  }
+ }
+ $('objname').onchange=e=>{selected.name=e.target.value;drawTree()};
+ $('color').value='#'+selected.material.color.getHexString();
+ $('color').oninput=e=>selected.material.color.set(e.target.value);
+}
 function add(t){choose(create(t));drawTree()}$('box').onclick=()=>add('Bloc');$('sphere').onclick=()=>add('Sphère');$('cylinder').onclick=()=>add('Cylindre');$('sketch-rect').onclick=()=>{const w=Number(prompt('Largeur du rectangle en mm :','80'));if(!Number.isFinite(w)||w<=0)return;const h=Number(prompt('Hauteur du rectangle en mm :','50'));if(!Number.isFinite(h)||h<=0)return;choose(createSketch('Esquisse rectangle',{width:w,height:h}));drawTree()};$('sketch-circle').onclick=()=>{const r=Number(prompt('Rayon du cercle en mm :','25'));if(!Number.isFinite(r)||r<=0)return;choose(createSketch('Esquisse cercle',{radius:r}));drawTree()};$('extrude').onclick=extrudeSketch;$('delete').onclick=()=>{if(selected){group.remove(selected);choose(null)}};
 $('save').onclick=()=>{localStorage.setItem('formacad-project',JSON.stringify(project()));$('save').textContent='Enregistré';setTimeout(()=>$('save').textContent='Enregistrer',1200)};
 $('json').onclick=()=>download('formacad.json',JSON.stringify(project(),null,2),'application/json');$('stl').onclick=()=>{const solids=new T.Group();group.children.filter(o=>!o.userData.isSketch).forEach(o=>solids.add(o.clone()));download('formacad.stl',new STLExporter().parse(solids),'model/stl')};
