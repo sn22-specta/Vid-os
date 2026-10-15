@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+import { ADDITION, SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {TransformControls} from 'three/addons/controls/TransformControls.js';
 import {STLExporter} from 'three/addons/exporters/STLExporter.js';
@@ -75,6 +75,37 @@ function cutThroughHole(){
   drawTree();drawProps();alert('Perçage appliqué à la pièce.');
  }catch(err){console.error('FormaCAD cut failed',err);alert('Le perçage a échoué : '+(err?.message||'erreur géométrique'));}
 }
+
+function combineSolid(operation){
+ if(!selected||selected.userData.isSketch||!selected.geometry){alert('Sélectionne la pièce principale.');return;}
+ const candidates=group.children.filter(o=>o!==selected&&!o.userData.isSketch&&o.geometry);
+ if(!candidates.length){alert('Ajoute une deuxième pièce solide pour effectuer cette opération.');return;}
+ const menu=candidates.map((o,i)=>`${i+1}. ${o.name} (${o.userData.type})`).join('\\n');
+ const answer=prompt((operation===SUBTRACTION?'Choisis la pièce à soustraire :':'Choisis la pièce à fusionner :')+'\\n'+menu,'1');
+ if(answer===null)return;
+ const index=Number(answer)-1;
+ if(!Number.isInteger(index)||index<0||index>=candidates.length){alert('Numéro de pièce invalide.');return;}
+ const tool=candidates[index];
+ try{
+  selected.updateMatrixWorld(true);tool.updateMatrixWorld(true);
+  const relative=selected.matrixWorld.clone().invert().multiply(tool.matrixWorld);
+  const baseGeometry=selected.geometry.clone();
+  const toolGeometry=tool.geometry.clone().applyMatrix4(relative);
+  const base=new Brush(baseGeometry,selected.material.clone());
+  const cutter=new Brush(toolGeometry,tool.material.clone());
+  base.updateMatrixWorld(true);cutter.updateMatrixWorld(true);
+  const evaluator=new Evaluator();evaluator.useGroups=false;
+  const result=evaluator.evaluate(base,cutter,operation);
+  if(!result.geometry||result.geometry.attributes.position.count===0)throw new Error('Résultat géométrique vide.');
+  selected.geometry.dispose();selected.geometry=result.geometry;
+  selected.userData.featureHistory=[...(selected.userData.featureHistory||[]),{operation:operation===SUBTRACTION?'Soustraction 3D':'Fusion 3D',tool:tool.name}];
+  selected.userData.feature={operation:operation===SUBTRACTION?'Soustraction 3D':'Fusion 3D',tool:tool.name};
+  group.remove(tool);tool.geometry.dispose();if(tool.material?.dispose)tool.material.dispose();
+  baseGeometry.dispose();toolGeometry.dispose();
+  choose(selected);frameAll();
+ }catch(err){console.error('FormaCAD boolean operation failed',err);alert('Opération impossible : '+(err?.message||'erreur géométrique')+'. Essaie avec deux pièces fermées qui se croisent réellement.');}
+}
+
 function frameAll(){
  const visible=group.children.filter(o=>!o.userData.isSketch);
  if(!visible.length){orbit.target.set(0,0,0);camera.position.set(120,100,140);return;}
@@ -89,7 +120,7 @@ function frameAll(){
  orbit.update();
 }
 
-function add(t){choose(create(t));drawTree()}$('box').onclick=()=>add('Bloc');$('sphere').onclick=()=>add('Sphère');$('cylinder').onclick=()=>add('Cylindre');$('sketch-rect').onclick=()=>{const w=Number(prompt('Largeur du rectangle en mm :','80'));if(!Number.isFinite(w)||w<=0)return;const h=Number(prompt('Hauteur du rectangle en mm :','50'));if(!Number.isFinite(h)||h<=0)return;choose(createSketch('Esquisse rectangle',{width:w,height:h}));drawTree()};$('sketch-circle').onclick=()=>{const r=Number(prompt('Rayon du cercle en mm :','25'));if(!Number.isFinite(r)||r<=0)return;choose(createSketch('Esquisse cercle',{radius:r}));drawTree()};$('extrude').onclick=extrudeSketch;$('hole').onclick=cutThroughHole;$('frame').onclick=frameAll;$('delete').onclick=()=>{if(selected){group.remove(selected);choose(null)}};
+function add(t){choose(create(t));drawTree()}$('box').onclick=()=>add('Bloc');$('sphere').onclick=()=>add('Sphère');$('cylinder').onclick=()=>add('Cylindre');$('sketch-rect').onclick=()=>{const w=Number(prompt('Largeur du rectangle en mm :','80'));if(!Number.isFinite(w)||w<=0)return;const h=Number(prompt('Hauteur du rectangle en mm :','50'));if(!Number.isFinite(h)||h<=0)return;choose(createSketch('Esquisse rectangle',{width:w,height:h}));drawTree()};$('sketch-circle').onclick=()=>{const r=Number(prompt('Rayon du cercle en mm :','25'));if(!Number.isFinite(r)||r<=0)return;choose(createSketch('Esquisse cercle',{radius:r}));drawTree()};$('extrude').onclick=extrudeSketch;$('hole').onclick=cutThroughHole;$('subtract').onclick=()=>combineSolid(SUBTRACTION);$('union').onclick=()=>combineSolid(ADDITION);$('frame').onclick=frameAll;$('delete').onclick=()=>{if(selected){group.remove(selected);choose(null)}};
 $('save').onclick=()=>{localStorage.setItem('formacad-project',JSON.stringify(project()));$('save').textContent='Enregistré';setTimeout(()=>$('save').textContent='Enregistrer',1200)};
 $('json').onclick=()=>download('formacad.json',JSON.stringify(project(),null,2),'application/json');$('stl').onclick=()=>{const solids=new T.Group();group.children.filter(o=>!o.userData.isSketch).forEach(o=>solids.add(o.clone()));download('formacad.stl',new STLExporter().parse(solids),'model/stl')};
 $('open').onclick=()=> $('file-input').click();
