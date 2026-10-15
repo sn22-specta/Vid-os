@@ -1,13 +1,20 @@
 #!/bin/bash
 set -e
 cd "$(dirname "$0")"
-PORT=8000
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "Python 3 n'est pas installé. Installe-le puis relance ce script."
+
+if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+  echo "Node.js et npm sont nécessaires."
+  echo "Installe la version LTS depuis https://nodejs.org, puis relance ce fichier."
   read -r -p "Appuie sur Entrée pour fermer..."
   exit 1
 fi
-echo "FormaCAD Studio démarre en local sur http://localhost:$PORT"
-echo "Laisse cette fenêtre Terminal ouverte pendant l'utilisation."
-( sleep 1; open "http://localhost:$PORT/" ) &
-python3 -m http.server "$PORT"
+
+if [ ! -d node_modules ]; then
+  echo "Installation des dépendances (premier lancement)..."
+  npm install
+fi
+
+echo "FormaCAD Studio démarre : http://localhost:5173/"
+echo "Garde cette fenêtre Terminal ouverte."
+( sleep 2; open "http://localhost:5173/" ) &
+npm run dev -- --host 127.0.0.1
