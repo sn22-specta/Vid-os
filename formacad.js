@@ -1,4 +1,5 @@
 import * as T from 'three';
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {TransformControls} from 'three/addons/controls/TransformControls.js';
 import {STLExporter} from 'three/addons/exporters/STLExporter.js';
@@ -43,7 +44,52 @@ function drawProps(){
  $('color').value='#'+selected.material.color.getHexString();
  $('color').oninput=e=>selected.material.color.set(e.target.value);
 }
-function add(t){choose(create(t));drawTree()}$('box').onclick=()=>add('Bloc');$('sphere').onclick=()=>add('Sphère');$('cylinder').onclick=()=>add('Cylindre');$('sketch-rect').onclick=()=>{const w=Number(prompt('Largeur du rectangle en mm :','80'));if(!Number.isFinite(w)||w<=0)return;const h=Number(prompt('Hauteur du rectangle en mm :','50'));if(!Number.isFinite(h)||h<=0)return;choose(createSketch('Esquisse rectangle',{width:w,height:h}));drawTree()};$('sketch-circle').onclick=()=>{const r=Number(prompt('Rayon du cercle en mm :','25'));if(!Number.isFinite(r)||r<=0)return;choose(createSketch('Esquisse cercle',{radius:r}));drawTree()};$('extrude').onclick=extrudeSketch;$('delete').onclick=()=>{if(selected){group.remove(selected);choose(null)}};
+
+/* FormaCAD feature operation: a genuine mesh subtraction for a through-hole.
+   The cut is computed in the selected solid's local coordinate system. */
+function cutThroughHole(){
+ if(!selected||selected.userData.isSketch||!selected.geometry){alert('Sélectionne d’abord une pièce solide.');return;}
+ const radius=Number(prompt('Rayon du trou traversant (mm) :','5'));
+ if(!Number.isFinite(radius)||radius<=0||radius>10000)return;
+ const px=Number(prompt('Position X du trou par rapport au centre de la pièce (mm) :','0'));
+ if(!Number.isFinite(px))return;
+ const pz=Number(prompt('Position Z du trou par rapport au centre de la pièce (mm) :','0'));
+ if(!Number.isFinite(pz))return;
+ try{
+  const baseGeometry=selected.geometry.clone();
+  baseGeometry.computeBoundingBox();
+  const bounds=baseGeometry.boundingBox;
+  const span=Math.max(bounds.max.x-bounds.min.x,bounds.max.y-bounds.min.y,bounds.max.z-bounds.min.z,1);
+  if(radius*2>=span*2){alert('Le rayon du trou est trop grand pour cette pièce.');baseGeometry.dispose();return;}
+  const base=new Brush(baseGeometry,selected.material.clone());
+  const cutter=new Brush(new T.CylinderGeometry(radius,radius,span*4,48),new T.MeshStandardMaterial());
+  cutter.position.set(px,0,pz);
+  base.updateMatrixWorld(true);cutter.updateMatrixWorld(true);
+  const evaluator=new Evaluator();evaluator.useGroups=false;
+  const result=evaluator.evaluate(base,cutter,SUBTRACTION);
+  if(!result.geometry||result.geometry.attributes.position.count===0)throw new Error('La découpe n’a produit aucune surface.');
+  selected.geometry.dispose();selected.geometry=result.geometry;
+  selected.userData.featureHistory=[...(selected.userData.featureHistory||[]),{operation:'Perçage traversant',radius,x:px,z:pz}];
+  selected.userData.feature={operation:'Perçage traversant',radius,x:px,z:pz};
+  baseGeometry.dispose();cutter.geometry.dispose();
+  drawTree();drawProps();alert('Perçage appliqué à la pièce.');
+ }catch(err){console.error('FormaCAD cut failed',err);alert('Le perçage a échoué : '+(err?.message||'erreur géométrique'));}
+}
+function frameAll(){
+ const visible=group.children.filter(o=>!o.userData.isSketch);
+ if(!visible.length){orbit.target.set(0,0,0);camera.position.set(120,100,140);return;}
+ const bounds=new T.Box3();
+ visible.forEach(o=>bounds.expandByObject(o));
+ if(bounds.isEmpty())return;
+ const center=bounds.getCenter(new T.Vector3()),size=bounds.getSize(new T.Vector3());
+ const radius=Math.max(size.x,size.y,size.z,20);
+ orbit.target.copy(center);
+ camera.position.copy(center).add(new T.Vector3(radius*1.8,radius*1.35,radius*1.8));
+ camera.near=Math.max(.01,radius/1000);camera.far=Math.max(3000,radius*100);camera.updateProjectionMatrix();
+ orbit.update();
+}
+
+function add(t){choose(create(t));drawTree()}$('box').onclick=()=>add('Bloc');$('sphere').onclick=()=>add('Sphère');$('cylinder').onclick=()=>add('Cylindre');$('sketch-rect').onclick=()=>{const w=Number(prompt('Largeur du rectangle en mm :','80'));if(!Number.isFinite(w)||w<=0)return;const h=Number(prompt('Hauteur du rectangle en mm :','50'));if(!Number.isFinite(h)||h<=0)return;choose(createSketch('Esquisse rectangle',{width:w,height:h}));drawTree()};$('sketch-circle').onclick=()=>{const r=Number(prompt('Rayon du cercle en mm :','25'));if(!Number.isFinite(r)||r<=0)return;choose(createSketch('Esquisse cercle',{radius:r}));drawTree()};$('extrude').onclick=extrudeSketch;$('hole').onclick=cutThroughHole;$('frame').onclick=frameAll;$('delete').onclick=()=>{if(selected){group.remove(selected);choose(null)}};
 $('save').onclick=()=>{localStorage.setItem('formacad-project',JSON.stringify(project()));$('save').textContent='Enregistré';setTimeout(()=>$('save').textContent='Enregistrer',1200)};
 $('json').onclick=()=>download('formacad.json',JSON.stringify(project(),null,2),'application/json');$('stl').onclick=()=>{const solids=new T.Group();group.children.filter(o=>!o.userData.isSketch).forEach(o=>solids.add(o.clone()));download('formacad.stl',new STLExporter().parse(solids),'model/stl')};
 $('open').onclick=()=> $('file-input').click();
