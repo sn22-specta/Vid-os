@@ -82,8 +82,8 @@ function combineSolid(operation){
  if(!selected||selected.userData.isSketch||!selected.geometry){alert('Sélectionne la pièce principale.');return;}
  const candidates=group.children.filter(o=>o!==selected&&!o.userData.isSketch&&o.geometry);
  if(!candidates.length){alert('Ajoute une deuxième pièce solide pour effectuer cette opération.');return;}
- const menu=candidates.map((o,i)=>`${i+1}. ${o.name} (${o.userData.type})`).join('\\n');
- const answer=prompt((operation===SUBTRACTION?'Choisis la pièce à soustraire :':'Choisis la pièce à fusionner :')+'\\n'+menu,'1');
+ const menu=candidates.map((o,i)=>`${i+1}. ${o.name} (${o.userData.type})`).join('\n');
+ const answer=prompt((operation===SUBTRACTION?'Choisis la pièce à soustraire :':'Choisis la pièce à fusionner :')+'\n'+menu,'1');
  if(answer===null)return;
  const index=Number(answer)-1;
  if(!Number.isInteger(index)||index<0||index>=candidates.length){alert('Numéro de pièce invalide.');return;}
