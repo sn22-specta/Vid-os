@@ -68,6 +68,8 @@ function cutThroughHole(){
   const evaluator=new Evaluator();evaluator.useGroups=false;
   const result=evaluator.evaluate(base,cutter,SUBTRACTION);
   if(!result.geometry||result.geometry.attributes.position.count===0)throw new Error('La découpe n’a produit aucune surface.');
+  result.geometry.setDrawRange(0,Infinity);
+  result.geometry.setDrawRange(0,Infinity);
   selected.geometry.dispose();selected.geometry=result.geometry;
   selected.userData.featureHistory=[...(selected.userData.featureHistory||[]),{operation:'Perçage traversant',radius,x:px,z:pz}];
   selected.userData.feature={operation:'Perçage traversant',radius,x:px,z:pz};
