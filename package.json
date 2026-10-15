@@ -1,0 +1,17 @@
+{
+  "name": "formacad-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "0.166.1"
+  },
+  "devDependencies": {
+    "vite": "^6.4.1"
+  }
+}
