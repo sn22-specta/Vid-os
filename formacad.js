@@ -1,7 +1,7 @@
-import * as T from 'https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/OrbitControls.js';
-import {TransformControls} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/TransformControls.js';
-import {STLExporter} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/exporters/STLExporter.js';
+import * as T from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {TransformControls} from 'three/addons/controls/TransformControls.js';
+import {STLExporter} from 'three/addons/exporters/STLExporter.js';
 const $=id=>document.getElementById(id),canvas=$('view'),scene=new T.Scene();scene.background=new T.Color('#171a20');
 const camera=new T.PerspectiveCamera(45,1,.1,3000);camera.position.set(120,100,140);
 const renderer=new T.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -21,7 +21,15 @@ function download(n,d,t){const a=document.createElement('a');a.href=URL.createOb
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='select')gizmo.detach();else if(selected){gizmo.setMode(mode);gizmo.attach(selected)}});
 canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect(),v=new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),ray=new T.Raycaster();ray.setFromCamera(v,camera);const hits=ray.intersectObjects(group.children);if(hits.length)choose(hits[0].object)});
 new ResizeObserver(()=>{const w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}}).observe(canvas);
-function animate(){requestAnimationFrame(animate);orbit.update();renderer.render(scene,camera)}create('Bloc',{name:'Bloc de départ'});choose(null);drawTree();animate();
+function animate(){requestAnimationFrame(animate);orbit.update();renderer.render(scene,camera)}
+try {
+ const saved=JSON.parse(localStorage.getItem('formacad-project')||'null');
+ if(saved&&Array.isArray(saved.objects)&&saved.objects.length){
+  $('name').value=saved.name||'Projet sans titre';
+  saved.objects.forEach(p=>create(p.type||'Bloc',p));
+ } else create('Bloc',{name:'Bloc de départ'});
+} catch(e) { console.warn('Projet local ignoré :',e); create('Bloc',{name:'Bloc de départ'}); }
+choose(null);drawTree();animate();
 
 
 /* Optional Supabase cloud storage. Configuration is kept in this browser. */
