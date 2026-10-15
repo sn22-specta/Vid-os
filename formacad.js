@@ -22,3 +22,39 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.datase
 canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect(),v=new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),ray=new T.Raycaster();ray.setFromCamera(v,camera);const hits=ray.intersectObjects(group.children);if(hits.length)choose(hits[0].object)});
 new ResizeObserver(()=>{const w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}}).observe(canvas);
 function animate(){requestAnimationFrame(animate);orbit.update();renderer.render(scene,camera)}create('Bloc',{name:'Bloc de départ'});choose(null);drawTree();animate();
+
+
+/* Optional Supabase cloud storage. Configuration is kept in this browser. */
+let cloudClient=null, cloudUser=null;
+async function initCloud(){
+ const url=localStorage.getItem('formacad-supabase-url'), key=localStorage.getItem('formacad-supabase-key');
+ if(url&&key){const m=await import('https://esm.sh/@supabase/supabase-js@2');cloudClient=m.createClient(url,key);const {data}=await cloudClient.auth.getSession();cloudUser=data.session?.user||null;}
+}
+$('settings').onclick=async()=>{
+ try{
+  if(!cloudClient){
+   const url=prompt('URL de ton projet Supabase (https://….supabase.co) :');if(!url)return;
+   const key=prompt('Clé publique Supabase (publishable ou anon). Jamais service_role :');if(!key)return;
+   if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url.trim())){alert('URL Supabase invalide.');return;}
+   const m=await import('https://esm.sh/@supabase/supabase-js@2');cloudClient=m.createClient(url.trim(),key.trim());
+   localStorage.setItem('formacad-supabase-url',url.trim());localStorage.setItem('formacad-supabase-key',key.trim());
+  }
+  const {data}=await cloudClient.auth.getSession();cloudUser=data.session?.user||null;
+  if(!cloudUser){
+   const email=prompt('E-mail de ton compte Supabase Auth :');if(!email)return;
+   const password=prompt('Mot de passe du compte Supabase Auth :');if(!password)return;
+   const result=await cloudClient.auth.signInWithPassword({email,password});if(result.error)throw result.error;cloudUser=result.data.user;
+  }
+  alert('Supabase connecté. Le bouton Enregistrer sauvegardera le projet dans le cloud.');
+ }catch(e){alert('Connexion Supabase impossible : '+e.message);}
+};
+$('save').onclick=async()=>{
+ const payload=project();localStorage.setItem('formacad-project',JSON.stringify(payload));
+ if(!cloudClient||!cloudUser){$('save').textContent='Sauvegardé local';setTimeout(()=>$('save').textContent='Enregistrer',1500);return;}
+ try{
+  let id=localStorage.getItem('formacad-cloud-project-id');if(!id){id=crypto.randomUUID();localStorage.setItem('formacad-cloud-project-id',id);}
+  const {error}=await cloudClient.from('formacad_projects').upsert({id,user_id:cloudUser.id,name:payload.name||'Projet sans titre',project_data:payload,updated_at:new Date().toISOString()},{onConflict:'id'});
+  if(error)throw error;$('save').textContent='Cloud OK';setTimeout(()=>$('save').textContent='Enregistrer',1800);
+ }catch(e){console.error(e);alert('Sauvegarde cloud échouée. Vérifie le fichier supabase.sql et les politiques RLS. La copie locale a bien été sauvegardée.');}
+};
+initCloud().catch(e=>console.error('Supabase init:',e));
