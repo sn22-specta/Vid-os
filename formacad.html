@@ -9,7 +9,7 @@
 </head>
 <body>
 <header><b>FormaCAD Studio</b><input id="name" value="Projet sans titre" aria-label="Nom du projet"><button id="save">Enregistrer</button><button id="settings">Connexion Supabase</button></header>
-<nav><button id="box">+ Bloc</button><button id="sphere">+ Sphère</button><button id="cylinder">+ Cylindre</button><button data-mode="translate">Déplacer</button><button data-mode="rotate">Tourner</button><button data-mode="scale">Échelle</button><button data-mode="select" class="active">Sélection</button><button id="delete">Supprimer</button><button id="json">Exporter JSON</button><button id="stl">Exporter STL</button></nav>
+<nav><button id="new-project">Nouveau</button><button id="open">Ouvrir JSON</button><button id="box">+ Bloc</button><button id="sphere">+ Sphère</button><button id="cylinder">+ Cylindre</button><button id="sketch-rect">Esquisse rectangle</button><button id="sketch-circle">Esquisse cercle</button><button id="extrude">Extrusion</button><button data-mode="translate">Déplacer</button><button data-mode="rotate">Tourner</button><button data-mode="scale">Échelle</button><button data-mode="select" class="active">Sélection</button><button id="delete">Supprimer</button><button id="json">Exporter JSON</button><button id="stl">Exporter STL</button><input id="file-input" type="file" accept=".json,application/json" hidden></nav>
 <main><aside><b>Arbre du projet</b><div id="tree"></div><p><small>Astuce : clique sur un objet pour le sélectionner.</small></p></aside><canvas id="view" aria-label="Vue 3D"></canvas><aside><b>Inspecteur</b><div id="props">Sélectionne un objet.</div></aside></main>
 <script type="module" src="./formacad.js"></script>
 </body></html>
